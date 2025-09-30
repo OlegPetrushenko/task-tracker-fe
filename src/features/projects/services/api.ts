@@ -1,6 +1,15 @@
 import axiosInstance from "../../../lib/axiosInstance";
-import type { CreateProjectDto } from "../types";
+interface Credentials {
+  email: string;
+  password: string;
+}
 
+// we already added prefix /api in axios config
+
+const LOGIN_PATH = "/auth/login";
+const REGISTER_PATH = "/users/register";
+
+// Добавьте этот интерфейс для updateCurrentUser
 interface UpdateUserData {
   email?: string;
   nickname?: string;
@@ -8,19 +17,28 @@ interface UpdateUserData {
   role?: string;
 }
 
-const PROJECTS_BASE_PATH = "/projects";
-
-export const fetchProjects = async () => {
-  const res = await axiosInstance.get(PROJECTS_BASE_PATH);
+export const fetchLogin = async (credentials: Credentials) => {
+  const res = await axiosInstance.post(LOGIN_PATH, credentials);
   return res.data;
 };
 
-export const fetchCreateProject = async (projectDto: CreateProjectDto) => {
-  const res = await axiosInstance.post(PROJECTS_BASE_PATH, projectDto);
+export const fetchRegister = async (credentials: Credentials) => {
+  const res = await axiosInstance.post(REGISTER_PATH, credentials);
   return res.data;
 };
 
+export const fetchCurrentUser = async () => {
+  const res = await axiosInstance.get('/users/me');
+  return res.data;
+};
+
+// ИСПРАВЛЕННАЯ СТРОКА 27 - замените any на UpdateUserData
 export const updateCurrentUser = async (payload: UpdateUserData) => {
-  const response = await axiosInstance.patch('/users/me', payload);
-  return response.data;
+  const res = await axiosInstance.patch('/users/me', payload);
+  return res.data;
+};
+
+export const deleteCurrentUser = async () => {
+  const res = await axiosInstance.delete('/users/me');
+  return res.data;
 };
