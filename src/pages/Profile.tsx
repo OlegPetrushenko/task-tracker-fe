@@ -1,0 +1,233 @@
+import React, { useEffect, useState } from "react";
+import axiosInstance from "../lib/axiosInstance";
+import { useAppSelector } from "../app/hooks";
+import { selectUser } from "../features/auth/slice/authSlice";
+import { selectProjects } from "../features/projects/slice/projectsSlice";
+
+/**
+ * Profile page / dashboard
+ *
+ * NOTE: backend endpoints used:
+ * GET  /users/me
+ * PATCH /users/me
+ * DELETE /users/me
+ */
+
+type UserProfile = {
+  id?: number | string;
+  email?: string;
+  nickname?: string;
+  role?: string;
+};
+
+type Project = {
+  tasks?: Array<{
+    completed?: boolean;
+    dueDate?: string;
+    endDate?: string;
+    deadline?: string;
+  }>;
+};
+
+const Profile: React.FC = () => {
+  const authUser = useAppSelector(selectUser);
+  const projects = useAppSelector(selectProjects) ?? [];
+
+  const [user, setUser] = useState<UserProfile | undefined>(authUser);
+  const [loading, setLoading] = useState(false);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [formValue, setFormValue] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const projectCount = projects.length;
+  const { totalTasks, completedTasks, missedTasks } = React.useMemo(() => {
+    let total = 0, completed = 0, missed = 0;
+    const now = Date.now();
+    for (const p of projects) {
+      const tasks = (p as Project).tasks ?? [];
+      total += tasks.length;
+      for (const t of tasks) {
+        if (t?.completed) completed++;
+        const due = t?.dueDate ?? t?.endDate ?? t?.deadline;
+        if (due && !t?.completed) {
+          const d = Date.parse(due);
+          if (!Number.isNaN(d) && d < now) missed++;
+        }
+      }
+    }
+    return { totalTasks: total, completedTasks: completed, missedTasks: missed };
+  }, [projects]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        const res = await axiosInstance.get("/users/me");
+        setUser(res.data);
+      } catch {
+        // ignore, keep auth store user
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const startEditing = (field: string) => {
+    setEditingField(field);
+    setFormValue(user?.[field as keyof UserProfile] as string ?? "");
+    setMessage(null);
+  };
+
+  const cancelEditing = () => {
+    setEditingField(null);
+    setFormValue("");
+  };
+
+  const saveField = async () => {
+    if (!editingField) return;
+    setLoading(true);
+    setMessage(null);
+    try {
+      const payload: Record<string, string> = {};
+      if (editingField === "password") {
+        payload.password = formValue;
+      } else {
+        payload[editingField] = formValue;
+      }
+      const res = await axiosInstance.patch("/users/me", payload);
+      setUser(res.data);
+      setMessage("Saved successfully");
+      setEditingField(null);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error?.response?.data?.message ?? "Failed to save";
+      setMessage(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (!confirm("Delete your account? This cannot be undone.")) return;
+    setLoading(true);
+    try {
+      await axiosInstance.delete("/users/me");
+      window.location.href = "/";
+    } catch {
+      setMessage("Failed to delete account");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Your profile</h1>
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+          <div>
+            <div className="text-sm text-gray-500 mb-1">Nickname</div>
+            <div className="flex items-center gap-2">
+              <div className="font-medium">{user?.nickname ?? (user?.email?.split("@")[0] ?? "—")}</div>
+              <button
+                className="text-sm px-2 py-1 border rounded text-blue-600"
+                onClick={() => startEditing("nickname")}
+              >
+                Edit
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-sm text-gray-500 mb-1">Email</div>
+            <div className="flex items-center gap-2">
+              <div className="font-medium">{user?.email ?? "—"}</div>
+              <button
+                className="text-sm px-2 py-1 border rounded text-blue-600"
+                onClick={() => startEditing("email")}
+              >
+                Edit
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-sm text-gray-500 mb-1">Password</div>
+            <div className="flex items-center gap-2">
+              <div className="font-medium">{showPassword ? "••••••••" : "••••••••"}</div>
+              <button
+                className="text-sm px-2 py-1 border rounded"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label="Toggle password visibility"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+              <button
+                className="text-sm px-2 py-1 border rounded text-blue-600"
+                onClick={() => startEditing("password")}
+              >
+                Change
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div className="p-3 bg-gray-50 rounded">
+            <div className="text-xs text-gray-500">Projects</div>
+            <div className="text-xl font-bold">{projectCount}</div>
+          </div>
+          <div className="p-3 bg-gray-50 rounded">
+            <div className="text-xs text-gray-500">Total tasks</div>
+            <div className="text-xl font-bold">{totalTasks}</div>
+          </div>
+          <div className="p-3 bg-gray-50 rounded">
+            <div className="text-xs text-gray-500">Completed</div>
+            <div className="text-xl font-bold">{completedTasks}</div>
+          </div>
+          <div className="p-3 bg-gray-50 rounded">
+            <div className="text-xs text-gray-500">Missed</div>
+            <div className="text-xl font-bold">{missedTasks}</div>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <div className="text-sm text-gray-500 mb-1">Profile status</div>
+          <div className="font-medium">{user?.role ?? "ROLE_USER"}</div>
+        </div>
+
+        {editingField && (
+          <div className="mt-6 p-4 border rounded bg-gray-50">
+            <div className="mb-2 font-medium">Edit {editingField}</div>
+            <input
+              className="w-full border rounded px-3 py-2"
+              value={formValue}
+              onChange={(e) => setFormValue(e.target.value)}
+              type={editingField === "password" ? "password" : "text"}
+            />
+            <div className="flex gap-2 mt-3">
+              <button className="px-3 py-2 bg-blue-600 text-white rounded" onClick={saveField} disabled={loading}>
+                Save
+              </button>
+              <button className="px-3 py-2 border rounded" onClick={cancelEditing} disabled={loading}>
+                Cancel
+              </button>
+            </div>
+            {message && <div className="mt-2 text-sm text-red-600">{message}</div>}
+          </div>
+        )}
+
+        <div className="mt-6">
+          <button className="px-4 py-2 text-red-600 border rounded" onClick={deleteAccount} disabled={loading}>
+            Delete account
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Profile;

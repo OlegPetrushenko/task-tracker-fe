@@ -17,3 +17,19 @@ export const fetchRegister = async (credentials: Credentials) => {
   const res = await axiosInstance.post(REGISTER_PATH, credentials);
   return res.data;
 };
+
+
+export const fetchCurrentUser = async () => {
+  const res = await axiosInstance.get('/users/me');
+  return res.data;
+};
+
+export const updateCurrentUser = async (payload: Record<string, any>) => {
+  const res = await axiosInstance.patch('/users/me', payload);
+  return res.data;
+};
+
+export const deleteCurrentUser = async () => {
+  const res = await axiosInstance.delete('/users/me');
+  return res.data;
+};
