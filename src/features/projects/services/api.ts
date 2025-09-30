@@ -1,7 +1,12 @@
 import axiosInstance from "../../../lib/axiosInstance";
 import type { CreateProjectDto } from "../types";
 
-// we already added  prefix /api in axios config
+interface UpdateUserData {
+  email?: string;
+  nickname?: string;
+  password?: string;
+  role?: string;
+}
 
 const PROJECTS_BASE_PATH = "/projects";
 
@@ -13,4 +18,9 @@ export const fetchProjects = async () => {
 export const fetchCreateProject = async (projectDto: CreateProjectDto) => {
   const res = await axiosInstance.post(PROJECTS_BASE_PATH, projectDto);
   return res.data;
+};
+
+export const updateCurrentUser = async (payload: UpdateUserData) => {
+  const response = await axiosInstance.patch('/users/me', payload);
+  return response.data;
 };
