@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 const RegistrationForm = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -21,11 +22,18 @@ const RegistrationForm = () => {
         .required("Password is required"),
     }),
     onSubmit: async (values) => {
-      console.log("registration");
-      const dispatchResult = await dispatch(register(values));
-      if (register.fulfilled.match(dispatchResult)) {
-        // if successful, it wiil navigate to login page
-        navigate("/login");
+      try {
+    
+        const resultAction = await dispatch(register(values));
+
+
+        if (register.fulfilled.match(resultAction)) {
+          navigate("/login");
+        }
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error("Registration error:", error.message);
+        }
       }
     },
   });
@@ -40,6 +48,7 @@ const RegistrationForm = () => {
           Enter your email and password to register
         </p>
       </div>
+
       <form onSubmit={formik.handleSubmit} className="space-y-4">
         {/* Email Field */}
         <div className="space-y-2">

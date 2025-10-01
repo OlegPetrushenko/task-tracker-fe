@@ -2,10 +2,13 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { login, selectLoginError } from "../slice/authSlice";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const loginError = useAppSelector(selectLoginError);
+
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -19,11 +22,18 @@ const LoginForm = () => {
         .min(8, "Password must be at least 8 characters")
         .required("Password is required"),
     }),
-    onSubmit: (values) => {
-      dispatch(login(values));
+onSubmit: async (values) => {
+  try {
+    await dispatch(login(values)).unwrap();
+    navigate("/profile");
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Login error:", error.message);
+    }
+  }
+},
 
-      // см в форме регистрации как сделать редирект в случае успешного выполнения запроса
-    },
+
   });
 
   return (
@@ -39,6 +49,7 @@ const LoginForm = () => {
           </div>
         )}
       </div>
+
       <form onSubmit={formik.handleSubmit} className="space-y-4">
         {/* Email Field */}
         <div className="space-y-2">
@@ -101,3 +112,4 @@ const LoginForm = () => {
 };
 
 export default LoginForm;
+
