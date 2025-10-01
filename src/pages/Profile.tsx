@@ -31,7 +31,10 @@ type Project = {
 
 const Profile: React.FC = () => {
   const authUser = useAppSelector(selectUser);
-  const projects = useAppSelector(selectProjects) ?? [];
+  const projects = useAppSelector(selectProjects);
+  
+  // ФИКС: оборачиваем в useMemo
+  const projectsList = React.useMemo(() => projects ?? [], [projects]);
 
   const [user, setUser] = useState<UserProfile | undefined>(authUser);
   const [loading, setLoading] = useState(false);
@@ -40,11 +43,11 @@ const Profile: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const projectCount = projects.length;
+  const projectCount = projectsList.length;
   const { totalTasks, completedTasks, missedTasks } = React.useMemo(() => {
     let total = 0, completed = 0, missed = 0;
     const now = Date.now();
-    for (const p of projects) {
+    for (const p of projectsList) {
       const tasks = (p as Project).tasks ?? [];
       total += tasks.length;
       for (const t of tasks) {
@@ -57,7 +60,7 @@ const Profile: React.FC = () => {
       }
     }
     return { totalTasks: total, completedTasks: completed, missedTasks: missed };
-  }, [projects]);
+  }, [projectsList]);
 
   useEffect(() => {
     const fetchProfile = async () => {
