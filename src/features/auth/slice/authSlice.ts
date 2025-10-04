@@ -6,6 +6,9 @@ import {isAxiosError} from "axios";
 const initialState: AuthSliceState = {
   isAuthenticated: false,
   user: undefined,
+  loginErrorMessage: undefined,
+  resetPasswordErrorMessage: undefined,
+  resetPasswordSuccess: false,
 };
 
 export const authSlice = createAppSlice({
@@ -58,6 +61,32 @@ export const authSlice = createAppSlice({
         },
       }
     ),
+
+    resetPassword: create.asyncThunk(
+      async (email: string) => {
+        return api.fetchResetPassword(email).catch((err) => {
+          if (isAxiosError(err)) {
+            throw new Error(
+              err.response?.data?.message || "Internal Server Error"
+            );
+          }
+        });
+      },
+      {
+        pending: (state) => {
+          state.resetPasswordErrorMessage = undefined;
+          state.resetPasswordSuccess = false;
+        },
+        fulfilled: (state) => {
+          state.resetPasswordErrorMessage = undefined;
+          state.resetPasswordSuccess = true;
+        },
+        rejected: (state, action) => {
+          state.resetPasswordErrorMessage = action.error.message;
+          state.resetPasswordSuccess = false;
+        },
+      }
+    ),
   }),
   // You can define your selectors here. These selectors receive the slice
   // state as their first argument.
@@ -66,11 +95,13 @@ export const authSlice = createAppSlice({
     selectUser: (state) => state.user,
     selectRole: (state) => state.user?.role,
     selectLoginError: (state) => state?.loginErrorMessage,
+    selectResetPasswordError: (state) => state?.resetPasswordErrorMessage,
+    selectResetPasswordSuccess: (state) => state?.resetPasswordSuccess,
   },
 });
 
 // // Action creators are generated for each case reducer function.
-export const { login, register } = authSlice.actions;
+export const { login, register, resetPassword } = authSlice.actions;
 
 // Selectors returned by `slice.selectors` take the root state as their first argument.
 export const {
@@ -78,4 +109,6 @@ export const {
   selectUser,
   selectRole,
   selectLoginError,
+  selectResetPasswordError,
+  selectResetPasswordSuccess,
 } = authSlice.selectors;

@@ -22,4 +22,6 @@ export interface AuthSliceState {
   isAuthenticated: boolean;
   user?: User;
   loginErrorMessage?: string;
+  resetPasswordErrorMessage?: string;
+  resetPasswordSuccess: boolean;
 }
