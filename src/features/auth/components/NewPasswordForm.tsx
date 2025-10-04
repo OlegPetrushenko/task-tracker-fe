@@ -57,6 +57,7 @@ const NewPasswordForm = () => {
           setTimeout(() => navigate("/login"), 2000);
         }
       } catch (err) {
+        console.error("New password error:", err);
         setStatusMessage("Network error. Please try again.");
         setStatusType("error");
         setShowButtons(true);
