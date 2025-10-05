@@ -6,6 +6,8 @@ import {isAxiosError} from "axios";
 const initialState: AuthSliceState = {
   isAuthenticated: false,
   user: undefined,
+    isLoggingOut: false,
+    logoutError: null,
 };
 
 export const authSlice = createAppSlice({
@@ -58,6 +60,37 @@ export const authSlice = createAppSlice({
         },
       }
     ),
+
+      logout: create.asyncThunk(
+          async () => {
+              return api.fetchLogout().catch((err) => {
+                  if (isAxiosError(err)) {
+                      throw new Error(
+                          err.response?.data?.message || "Internal Server Error"
+                      );
+                  }
+              });
+          },
+          {
+              pending: (state) => {
+                  state.isLoggingOut = true;
+                  state.logoutError = null;
+              },
+              fulfilled: (state) => {
+                  state.isLoggingOut = false;
+                  state.isAuthenticated = false;
+                  // очищаем пользователя (тип не трогаем)
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  state.user = undefined as any;
+                  state.loginErrorMessage = undefined;
+              },
+              rejected: (state, action) => {
+                  state.isLoggingOut = false;
+                  state.logoutError = action.error?.message || "Logout failed";
+              },
+          }
+      ),
+
   }),
   // You can define your selectors here. These selectors receive the slice
   // state as their first argument.
@@ -66,11 +99,15 @@ export const authSlice = createAppSlice({
     selectUser: (state) => state.user,
     selectRole: (state) => state.user?.role,
     selectLoginError: (state) => state?.loginErrorMessage,
+
+      selectIsLoggingOut: (state) => state.isLoggingOut,
+      selectLogoutError: (state) => state.logoutError,
   },
 });
 
 // // Action creators are generated for each case reducer function.
 export const { login, register } = authSlice.actions;
+export const { logout } = authSlice.actions;
 
 // Selectors returned by `slice.selectors` take the root state as their first argument.
 export const {
@@ -79,3 +116,5 @@ export const {
   selectRole,
   selectLoginError,
 } = authSlice.selectors;
+
+export const { selectIsLoggingOut, selectLogoutError } = authSlice.selectors;

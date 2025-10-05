@@ -22,4 +22,7 @@ export interface AuthSliceState {
   isAuthenticated: boolean;
   user?: User;
   loginErrorMessage?: string;
+
+  isLoggingOut: boolean;
+  logoutError: string | null;
 }

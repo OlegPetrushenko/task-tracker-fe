@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
+import { useAppSelector } from "../../app/hooks";
+import { selectIsAuthenticated } from "../../features/auth/slice/authSlice";
+import LogoutButton from "../../features/auth/components/LogoutButton";
 
 export default function Header() {
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
   return (
     <header className="w-full border-b bg-white shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
@@ -29,6 +33,10 @@ export default function Header() {
           >
             Projects
           </Link>
+
+            {/* show Sign up / Sign in for guests only */}
+            {!isAuthenticated && (
+                <>
           <Link
             to="/register"
             className="rounded border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-500 hover:text-black transition"
@@ -41,6 +49,10 @@ export default function Header() {
           >
             Sign in
           </Link>
+                </>
+            )}
+            {/* show Logout for authenticated users */}
+            {isAuthenticated && <LogoutButton />}
         </nav>
       </div>
     </header>
