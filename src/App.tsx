@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Projects from "./pages/Projects";
 import Profile from "./pages/Profile";
 import ConfirmPage from "./pages/Confirm";
+import TasksPage from "./pages/Tasks";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Layout>
         <Routes>
           <Route index element={<Home />} />
+          <Route path="/tasks" element={<TasksPage />} />
           <Route path="/about" element={<About />} />
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />

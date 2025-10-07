@@ -66,7 +66,7 @@ const Profile: React.FC = () => {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const res = await axiosInstance.get("/users/me");
+        const res = await axiosInstance.get('/users/profile');
         setUser(res.data);
       } catch {
         // ignore, keep auth store user
@@ -99,7 +99,7 @@ const Profile: React.FC = () => {
       } else {
         payload[editingField] = formValue;
       }
-      const res = await axiosInstance.patch("/users/me", payload);
+      const res = await axiosInstance.put('/users/profile', payload);
       setUser(res.data);
       setMessage("Saved successfully");
       setEditingField(null);
@@ -116,7 +116,7 @@ const Profile: React.FC = () => {
     if (!confirm("Delete your account? This cannot be undone.")) return;
     setLoading(true);
     try {
-      await axiosInstance.delete("/users/me");
+      await axiosInstance.delete('/users/profile');
       window.location.href = "/";
     } catch {
       setMessage("Failed to delete account");
