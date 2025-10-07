@@ -1,7 +1,7 @@
 import { createAppSlice } from "../../../app/createAppSlice";
 import * as api from "../services/api";
 import { isAxiosError, type AxiosError } from "axios";
-import type { TaskDto, CreateTaskDto } from "../types"; 
+import type { TaskDto, CreateTaskDto } from "../types"; // ✅ вот эта строка
 
 
 type TasksState = {
@@ -133,3 +133,4 @@ export const tasksSlice = createAppSlice({
 
 export const { getTasksByProject, createTask, updateTask, deleteTask } = tasksSlice.actions;
 export const { selectTasksByProject, selectTasksLoading, selectTasksError } = tasksSlice.selectors;
+
