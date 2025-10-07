@@ -1,17 +1,20 @@
-import {createAppSlice} from "../../../app/createAppSlice";
-import type {AuthSliceState, Credentials, UserRegistrationDto,} from "../types";
+import { createAppSlice } from "../../../app/createAppSlice";
+import type {
+  AuthSliceState,
+  Credentials,
+  UserRegistrationDto,
+} from "../types";
 import * as api from "../services/api";
-import {isAxiosError} from "axios";
+import { isAxiosError } from "axios";
 
 const initialState: AuthSliceState = {
   isAuthenticated: false,
   user: undefined,
-    isLoggingOut: false,
-    logoutError: null,
+  isLoggingOut: false,
+  logoutError: null,
   loginErrorMessage: undefined,
   resetPasswordErrorMessage: undefined,
   resetPasswordSuccess: false,
-
 };
 
 export const authSlice = createAppSlice({
@@ -32,14 +35,17 @@ export const authSlice = createAppSlice({
         pending: (state) => {
           state.isAuthenticated = false;
         },
-        fulfilled: (state) => {
+        fulfilled: (state, action) => {
           state.isAuthenticated = true;
           state.loginErrorMessage = undefined;
+          state.user = action.payload.user; // если бэк возвращает { user, token }
+  state.token = action.payload.token; // сохраняем токен в state
+  localStorage.setItem("token", action.payload.token);
+  
         },
         rejected: (state, action) => {
           state.isAuthenticated = false;
           state.user = undefined;
-          console.log(action.error);
           state.loginErrorMessage = action.error.message;
         },
       }
@@ -48,7 +54,6 @@ export const authSlice = createAppSlice({
     register: create.asyncThunk(
       async (dto: UserRegistrationDto) => {
         return api.fetchRegister(dto);
-        // The value we return becomes the `fulfilled` action payload
       },
       {
         pending: (state) => {
@@ -64,28 +69,77 @@ export const authSlice = createAppSlice({
         },
       }
     ),
+
+    // 1) thunk-экшен logout
+    logout: create.asyncThunk(
+      async () => {
+        return api.fetchLogout();
+      },
+      {
+        pending: (state) => {
+          state.isLoggingOut = true;
+          state.logoutError = null;
+        },
+        fulfilled: (state) => {
+          state.isLoggingOut = false;
+          state.isAuthenticated = false;
+          state.user = undefined;
+        },
+        rejected: (state, action) => {
+          state.isLoggingOut = false;
+          state.logoutError = action.error.message ?? null;
+        },
+      }
+    ),
+
+    // 2) thunk-экшен resetPassword
+    resetPassword: create.asyncThunk(
+      async (email: string) => {
+        return api.fetchResetPassword(email);
+      },
+      {
+        pending: (state) => {
+          state.resetPasswordErrorMessage = undefined;
+          state.resetPasswordSuccess = false;
+        },
+        fulfilled: (state) => {
+          state.resetPasswordSuccess = true;
+        },
+        rejected: (state, action) => {
+          state.resetPasswordErrorMessage = action.error.message;
+        },
+      }
+    ),
   }),
-  // You can define your selectors here. These selectors receive the slice
-  // state as their first argument.
+
   selectors: {
     selectIsAuthenticated: (state) => state.isAuthenticated,
     selectUser: (state) => state.user,
     selectRole: (state) => state.user?.role,
-    selectLoginError: (state) => state?.loginErrorMessage,
+    selectLoginError: (state) => state.loginErrorMessage,
+
+    // — вот эти селекторы до сих пор не было
+    selectResetPasswordError: (state) => state.resetPasswordErrorMessage,
+    selectResetPasswordSuccess: (state) => state.resetPasswordSuccess,
+
+    selectIsLoggingOut: (state) => state.isLoggingOut,
+    selectLogoutError: (state) => state.logoutError,
   },
 });
 
-// // Action creators are generated for each case reducer function.
-export const { login, register } = authSlice.actions;
+// Экспортируем экшен-криэйторы
+export const { login, register, logout, resetPassword } =
+  authSlice.actions;
 
-// Selectors returned by `slice.selectors` take the root state as their first argument.
+// Экспортируем все селекторы одним набором
 export const {
   selectIsAuthenticated,
   selectUser,
   selectRole,
   selectLoginError,
   selectResetPasswordError,
-  selectResetPasswordSuccess,
+  selectResetPasswordSuccess, 
+  selectIsLoggingOut,
+  selectLogoutError,
 } = authSlice.selectors;
 
-export const { selectIsLoggingOut, selectLogoutError } = authSlice.selectors;

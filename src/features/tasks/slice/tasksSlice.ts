@@ -1,7 +1,7 @@
 import { createAppSlice } from "../../../app/createAppSlice";
 import * as api from "../services/api";
 import { isAxiosError, type AxiosError } from "axios";
-import type { TaskDto, CreateTaskDto } from "../types"; // ✅ вот эта строка
+import type { TaskDto, CreateTaskDto } from "../types"; 
 
 
 type TasksState = {
@@ -44,7 +44,6 @@ export const tasksSlice = createAppSlice({
 
     createTask: create.asyncThunk(
         async (payload: { projectId: string; dto: Partial<TaskDto> }) => {
-    // Преобразуем dto в CreateTaskDto, добавив обязательное поле project
      const dto: CreateTaskDto = {
       ...(payload.dto as CreateTaskDto),
       project: { id: payload.projectId },
@@ -64,6 +63,7 @@ export const tasksSlice = createAppSlice({
       state.isLoading = false;
       const proj = action.meta.arg.projectId;
       state.tasksByProject[proj] = [...(state.tasksByProject[proj] || []), action.payload];
+      
     },
     rejected: (state, action) => {
       state.isLoading = false;

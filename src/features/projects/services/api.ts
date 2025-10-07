@@ -14,3 +14,7 @@ export const fetchCreateProject = async (projectDto: CreateProjectDto) => {
   const res = await axiosInstance.post(PROJECTS_BASE_PATH, projectDto);
   return res.data;
 };
+
+export const deleteProject = async (id: string) => {
+  await axiosInstance.delete(`${PROJECTS_BASE_PATH}/${id}`);
+};  

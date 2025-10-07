@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { selectProjects, getAllProjects } from "../features/projects/slice/projectsSlice";
+import { selectProjects, getAllProjects, deleteProject } from "../features/projects/slice/projectsSlice";
 import { getTasksByProject, selectTasksByProject } from "../features/tasks/slice/tasksSlice";
 import TaskCard from "../features/tasks/components/TaskCard";
 import TaskForm from "../features/tasks/components/TaskForm";
 import type { TaskDto } from "../features/tasks/types";
 import type { Project } from "../features/projects/types";
-
-
-
 
 export default function TasksPage() {
   const dispatch = useAppDispatch();
@@ -18,6 +15,11 @@ export default function TasksPage() {
   const [creatingFor, setCreatingFor] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
 
+  const handleDeleteProject = (projectId: string, projectTitle: string) => {
+    if (window.confirm(`Are you sure you want to delete project "${projectTitle}" and all its tasks?`)) {
+      dispatch(deleteProject(projectId));
+    }
+  };
 
   useEffect(() => {
     dispatch(getAllProjects()); // load folders
@@ -45,7 +47,7 @@ export default function TasksPage() {
             <section key={p.id} className="border rounded bg-white p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <button className="font-medium" onClick={() => onToggle(p.id)}>
+                  <button className="font-medium text-left" onClick={() => onToggle(p.id)}>
                     {p.title}
                   </button>
                   <div className="text-xs text-gray-500">{tasks.length} task(s)</div>
@@ -54,6 +56,14 @@ export default function TasksPage() {
                   <button onClick={() => setCreatingFor(p.id)} className="px-2 py-1 border rounded">
                     + Task
                   </button>
+                  {/* V-- ВОТ ЭТА КНОПКА БЫЛА ДОБАВЛЕНА --V */}
+                  <button
+                    onClick={() => handleDeleteProject(p.id, p.title)}
+                    className="px-2 py-1 border rounded text-sm text-red-600 hover:bg-red-50"
+                  >
+                    Delete Project
+                  </button>
+                  {/* A-- КОНЕЦ ДОБАВЛЕНИЯ --A */}
                 </div>
               </div>
 

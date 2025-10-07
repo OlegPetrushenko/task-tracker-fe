@@ -25,7 +25,7 @@ export default function TaskCard({ task, projectId, onEdit }: Props) {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 30_000); // обновляем каждые 30s
+    const id = setInterval(() => setNow(Date.now()), 30_000); 
     return () => clearInterval(id);
   }, []);
 
@@ -53,7 +53,6 @@ export default function TaskCard({ task, projectId, onEdit }: Props) {
       }
     } catch (err) {
       console.error("toggleComplete err", err);
-      // показать UI-ошибку при необходимости
     }
   };
 

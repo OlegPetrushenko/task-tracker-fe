@@ -26,3 +26,4 @@ export const updateTask = async (id: string, dto: Partial<CreateTaskDto>): Promi
 export const deleteTask = async (id: string): Promise<void> => {
   await axiosInstance.delete(`${TASKS_BASE}/${id}`);
 };
+
