@@ -46,8 +46,8 @@ export const projectsSlice = createAppSlice({
               err.response?.data?.message || "Internal Server Error"
             );
           }
+          throw err;
         });
-        // The value we return becomes the `fulfilled` action payload
       },
       {
         pending: (state) => {
@@ -63,20 +63,52 @@ export const projectsSlice = createAppSlice({
         },
       }
     ),
+
+    // V-- ДОБАВЛЕНО НАЧАЛО --V
+    deleteProject: create.asyncThunk(
+      async (id: string, { rejectWithValue }) => {
+        try {
+          await api.deleteProject(id);
+          return id; // Возвращаем id для удаления из стейта
+        } catch (err) {
+          if (isAxiosError(err)) {
+            return rejectWithValue(
+              err.response?.data?.message || "Failed to delete project"
+            );
+          }
+          throw err;
+        }
+      },
+      {
+        fulfilled: (state, action) => {
+          // action.payload будет содержать id удаленного проекта
+          state.projects = state.projects.filter(
+            (p) => p.id !== action.payload
+          );
+        },
+        rejected: (_state, action) => {
+          // Можно сохранить ошибку для отображения в UI
+          console.error(
+            "Delete project error:",
+            action.payload || action.error.message
+          );
+        },
+      }
+    ),
+    // A-- ДОБАВЛЕНО КОНЕЦ --A
   }),
-  // You can define your selectors here. These selectors receive the slice
-  // state as their first argument.
   selectors: {
     selectProjects: (state) => state.projects,
     selectIsLoading: (state) => state.isLoading,
-    selectCreateProjectErrorMessage: (state) => state.createProjectErrorMessage,
+    selectCreateProjectErrorMessage: (state) =>
+      state.createProjectErrorMessage,
   },
 });
 
-// // Action creators are generated for each case reducer function.
-export const { createProject, getAllProjects } = projectsSlice.actions;
+// V-- ИЗМЕНЕНИЕ: Добавлен экспорт deleteProject --V
+export const { createProject, getAllProjects, deleteProject } =
+  projectsSlice.actions;
 
-// Selectors returned by `slice.selectors` take the root state as their first argument.
 export const {
   selectProjects,
   selectIsLoading,

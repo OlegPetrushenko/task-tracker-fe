@@ -3,6 +3,7 @@ import * as Yup from "yup";
 import { login, selectLoginError } from "../slice/authSlice";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const LoginForm = () => {
   const dispatch = useAppDispatch();
@@ -18,9 +19,7 @@ const LoginForm = () => {
       email: Yup.string()
         .email("Invalid email address")
         .required("Email is required"),
-      password: Yup.string()
-        .min(8, "Password must be at least 8 characters")
-        .required("Password is required"),
+      password: Yup.string().required("Password is required"),
     }),
 onSubmit: async (values) => {
   try {
@@ -106,6 +105,14 @@ onSubmit: async (values) => {
         >
           Sign in
         </button>
+
+        {/* Forgot Password Link */}
+        <Link
+          to="/auth/reset-password"
+          className="text-sm text-gray-500 hover:text-gray-700 hover:font-medium transition-colors duration-200 cursor-pointer"
+        >
+          Forgot password?
+        </Link>
       </form>
     </div>
   );

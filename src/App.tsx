@@ -7,6 +7,10 @@ import Login from "./pages/Login";
 import Projects from "./pages/Projects";
 import Profile from "./pages/Profile";
 import ConfirmPage from "./pages/Confirm";
+import TasksPage from "./pages/Tasks";
+import ResetPassword from "./pages/ResetPassword";
+import ResetPasswordSent from "./pages/ResetPasswordSent";
+import NewPassword from "./pages/NewPassword";
 
 function App() {
   return (
@@ -15,12 +19,16 @@ function App() {
       <Layout>
         <Routes>
           <Route index element={<Home />} />
+          <Route path="/tasks" element={<TasksPage />} />
           <Route path="/about" element={<About />} />
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />
           <Route path="/projects" element={<Projects />} />          
           <Route path="/profile" element={<Profile />} />         
           <Route path="/confirm" element={<ConfirmPage />} />
+          <Route path="/auth/reset-password" element={<ResetPassword />} />
+          <Route path="/auth/reset-sent" element={<ResetPasswordSent />} />
+          <Route path="/auth/new-password" element={<NewPassword />} />
         </Routes>
       </Layout>
     </div>
