@@ -10,6 +10,7 @@ const LOGIN_PATH = "/auth/login";
 const REGISTER_PATH = "/users/register";
 const LOGOUT_PATH = "/auth/logout";
 
+const RESET_PASSWORD_PATH = "/auth/reset-password";
 
 // Добавьте этот интерфейс для updateCurrentUser
 interface UpdateUserData {
@@ -46,5 +47,10 @@ export const updateCurrentUser = async (payload: UpdateUserData) => {
 
 export const deleteCurrentUser = async () => {
   const res = await axiosInstance.delete('/users/me');
+  return res.data;
+};
+
+export const fetchResetPassword = async (email: string) => {
+  const res = await axiosInstance.post(RESET_PASSWORD_PATH, { email });
   return res.data;
 };

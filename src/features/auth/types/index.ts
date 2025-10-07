@@ -25,4 +25,6 @@ export interface AuthSliceState {
 
   isLoggingOut: boolean;
   logoutError: string | null;
+  resetPasswordErrorMessage?: string;
+  resetPasswordSuccess: boolean;
 }
