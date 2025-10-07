@@ -8,6 +8,8 @@ interface Credentials {
 
 const LOGIN_PATH = "/auth/login";
 const REGISTER_PATH = "/users/register";
+const LOGOUT_PATH = "/auth/logout";
+
 
 // Добавьте этот интерфейс для updateCurrentUser
 interface UpdateUserData {
@@ -26,6 +28,10 @@ export const fetchRegister = async (credentials: Credentials) => {
   const res = await axiosInstance.post(REGISTER_PATH, credentials);
   return res.data;
 };
+
+export async function fetchLogout(): Promise<void> {
+    await axiosInstance.post(LOGOUT_PATH);
+}
 
 export const fetchCurrentUser = async () => {
   const res = await axiosInstance.get('/users/me');
