@@ -6,7 +6,7 @@ import type { CreateProjectDto } from "../types";
 const PROJECTS_BASE_PATH = "/projects";
 
 export const fetchProjects = async () => {
-  const res = await axiosInstance.get(PROJECTS_BASE_PATH);
+  const res = await axiosInstance.get("/projects/my");
   return res.data;
 };
 

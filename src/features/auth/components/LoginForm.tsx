@@ -1,6 +1,7 @@
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { login, selectLoginError } from "../slice/authSlice";
+import { getAllProjects } from "../../projects/slice/projectsSlice";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -24,6 +25,7 @@ const LoginForm = () => {
 onSubmit: async (values) => {
   try {
     await dispatch(login(values)).unwrap();
+    await dispatch(getAllProjects());
     navigate("/profile");
   } catch (error: unknown) {
     if (error instanceof Error) {
