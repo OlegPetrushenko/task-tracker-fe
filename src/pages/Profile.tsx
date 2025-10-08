@@ -16,7 +16,7 @@ import { selectProjects } from "../features/projects/slice/projectsSlice";
 type UserProfile = {
   id?: number | string;
   email?: string;
-  nickname?: string;
+  displayName?: string;
   role?: string;
 };
 
@@ -132,12 +132,12 @@ const Profile: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
           <div>
-            <div className="text-sm text-gray-500 mb-1">Nickname</div>
+            <div className="text-sm text-gray-500 mb-1">DisplayName</div>
             <div className="flex items-center gap-2">
-              <div className="font-medium">{user?.nickname ?? (user?.email?.split("@")[0] ?? "—")}</div>
+              <div className="font-medium">{user?.displayName ?? (user?.email?.split("@")[0] ?? "—")}</div>
               <button
                 className="text-sm px-2 py-1 border rounded text-blue-600"
-                onClick={() => startEditing("nickname")}
+                onClick={() => startEditing("displayName")}
               >
                 Edit
               </button>
