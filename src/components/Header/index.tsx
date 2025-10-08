@@ -57,7 +57,18 @@ export default function Header() {
             </>
           )}
           {/* show Logout for authenticated users */}
-          {isAuthenticated && <LogoutButton />}
+            {isAuthenticated && (
+                <>
+                    <Link
+                        to="/profile"
+                        className="rounded border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-500 hover:text-black transition"
+                    >
+                        Profile
+                    </Link>
+                    <LogoutButton />
+                </>
+            )}
+
         </nav>
       </div>
     </header>
