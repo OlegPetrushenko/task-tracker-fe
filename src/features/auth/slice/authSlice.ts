@@ -110,6 +110,15 @@ export const authSlice = createAppSlice({
         },
       }
     ),
+
+      // bootstrap auth from /users/profile at app start
+      bootstrapFromProfile: create.reducer<NonNullable<AuthSliceState["user"]>>(
+          (state, action) => {
+              state.isAuthenticated = true;
+              state.loginErrorMessage = undefined;
+              state.user = action.payload; // payload = { email, role, confirmationStatus } от BE
+          }
+      ),
   }),
 
   selectors: {
@@ -128,7 +137,7 @@ export const authSlice = createAppSlice({
 });
 
 // Экспортируем экшен-криэйторы
-export const { login, register, logout, resetPassword } =
+export const { login, register, logout, resetPassword, bootstrapFromProfile } =
   authSlice.actions;
 
 // Экспортируем все селекторы одним набором
