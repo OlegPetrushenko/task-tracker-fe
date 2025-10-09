@@ -95,6 +95,34 @@ export const projectsSlice = createAppSlice({
         },
       }
     ),
+
+    acceptInviteToProject: create.asyncThunk(
+      async (inviteToken: string, { rejectWithValue }) => {
+        try {
+          return await api.acceptInviteToProject(inviteToken);
+        } catch (err) {
+          if (isAxiosError(err)) {
+            return rejectWithValue(
+              err.response?.data?.message || "Failed to accept invite"
+            );
+          }
+          throw err;
+        }
+      },
+      {
+        fulfilled: (state, action) => {
+          if (action.payload) {
+            state.projects.push(action.payload);
+          }
+        },
+        rejected: (_state, action) => {
+          console.error(
+            "Accept invite error:",
+            action.payload || action.error.message
+          );
+        },
+      }
+    ),
     // A-- ДОБАВЛЕНО КОНЕЦ --A
   }),
   selectors: {
@@ -106,8 +134,12 @@ export const projectsSlice = createAppSlice({
 });
 
 // V-- ИЗМЕНЕНИЕ: Добавлен экспорт deleteProject --V
-export const { createProject, getAllProjects, deleteProject } =
-  projectsSlice.actions;
+export const { 
+    createProject, 
+    getAllProjects, 
+    deleteProject, 
+    acceptInviteToProject 
+} = projectsSlice.actions;
 
 export const {
   selectProjects,

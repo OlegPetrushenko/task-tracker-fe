@@ -18,3 +18,10 @@ export const fetchCreateProject = async (projectDto: CreateProjectDto) => {
 export const deleteProject = async (id: string) => {
   await axiosInstance.delete(`${PROJECTS_BASE_PATH}/${id}`);
 };  
+
+export const acceptInviteToProject = async (inviteToken: string) => {
+  const res = await axiosInstance.post(`/invitations/accept`, null, {
+    params: { inviteToken },
+  });
+  return res.data;
+};

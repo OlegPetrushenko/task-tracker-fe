@@ -5,14 +5,15 @@ import { getAllProjects, acceptInviteToProject } from "../../projects/slice/proj
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 
-const LoginForm = () => {
+const ConfirmProjectForm = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const loginError = useAppSelector(selectLoginError);
   const location = useLocation();
+
   const searchParams = new URLSearchParams(location.search);
   const inviteToken = searchParams.get("inviteToken");
-  const loginError = useAppSelector(selectLoginError);
-  
+
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -24,23 +25,21 @@ const LoginForm = () => {
         .required("Email is required"),
       password: Yup.string().required("Password is required"),
     }),
-onSubmit: async (values) => {
-  try {
-    await dispatch(login(values)).unwrap();
-    if (inviteToken) {
-      console.log("Sending inviteToken:", inviteToken);
-      await dispatch(acceptInviteToProject(inviteToken)).unwrap();
-    }
-    await dispatch(getAllProjects());
-    navigate("/profile");
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error("Login error:", error.message);
-    }
-  }
-},
-
-
+    onSubmit: async (values) => {
+      try {
+        await dispatch(login(values)).unwrap();
+        if (inviteToken) {
+          console.log("Accepting invite with token:", inviteToken);
+          await dispatch(acceptInviteToProject(inviteToken)).unwrap();
+        }
+        await dispatch(getAllProjects());
+        navigate("/profile");
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error("Login error:", error.message);
+        }
+      }
+    },
   });
 
   return (
@@ -58,7 +57,6 @@ onSubmit: async (values) => {
       </div>
 
       <form onSubmit={formik.handleSubmit} className="space-y-4">
-        {/* Email Field */}
         <div className="space-y-2">
           <label
             htmlFor="email"
@@ -82,7 +80,6 @@ onSubmit: async (values) => {
           )}
         </div>
 
-        {/* Password Field */}
         <div className="space-y-2">
           <label
             htmlFor="password"
@@ -106,7 +103,6 @@ onSubmit: async (values) => {
           )}
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
           className="w-full inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
@@ -114,17 +110,15 @@ onSubmit: async (values) => {
           Sign in
         </button>
 
-        {/* Forgot Password Link */}
         <Link
-          to="/auth/reset-password"
+          to={`/register${inviteToken ? `?inviteToken=${inviteToken}` : ""}`}
           className="text-sm text-gray-500 hover:text-gray-700 hover:font-medium transition-colors duration-200 cursor-pointer"
         >
-          Forgot password?
+          Not registered yet? Click here
         </Link>
       </form>
     </div>
   );
 };
 
-export default LoginForm;
-
+export default ConfirmProjectForm;
