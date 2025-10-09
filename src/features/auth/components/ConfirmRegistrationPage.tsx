@@ -31,6 +31,7 @@ export default function ConfirmRegistrationPage() {
             const data = await response.json();
             if (data?.message) errorMsg = data.message;
           } catch {
+            // Ignore the JSON parsing error
           }
 
           setStatusMessage(errorMsg);
