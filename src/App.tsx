@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Layout from "./layouts/Layout";
@@ -12,14 +12,30 @@ import ResetPassword from "./pages/ResetPassword";
 import ResetPasswordSent from "./pages/ResetPasswordSent";
 import NewPassword from "./pages/NewPassword";
 import ConfirmInviteProject from "./pages/ConfirmInviteProject";
+import ConfirmRegistration from "./pages/ConfirmRegistration";
 import RestoreAuthOnStart from "./features/auth/components/RestoreAuthOnStart";
 
 function App() {
+  const location = useLocation();
+
+  const publicPaths = [
+    "/login",
+    "/register",
+    "/auth/confirm-registration",
+    "/auth/reset-password",
+    "/auth/reset-sent",
+    "/auth/new-password",
+  ];
+
+  const shouldRestoreAuth = !publicPaths.some((path) =>
+    location.pathname.startsWith(path)
+  );
+
   return (
     <div>
-      <nav></nav>
+
+      {shouldRestoreAuth && <RestoreAuthOnStart />}
       <Layout>
-          <RestoreAuthOnStart />
         <Routes>
           <Route index element={<Home />} />
           <Route path="/tasks" element={<TasksPage />} />
@@ -33,6 +49,7 @@ function App() {
           <Route path="/auth/reset-sent" element={<ResetPasswordSent />} />
           <Route path="/auth/new-password" element={<NewPassword />} />
           <Route path="/auth/confirm-project" element={<ConfirmInviteProject />} />
+          <Route path="/auth/confirm-registration" element={<ConfirmRegistration />} />
         </Routes>
       </Layout>
     </div>
