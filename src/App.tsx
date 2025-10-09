@@ -12,12 +12,14 @@ import ResetPassword from "./pages/ResetPassword";
 import ResetPasswordSent from "./pages/ResetPasswordSent";
 import NewPassword from "./pages/NewPassword";
 import ConfirmInviteProject from "./pages/ConfirmInviteProject";
+import RestoreAuthOnStart from "./features/auth/components/RestoreAuthOnStart";
 
 function App() {
   return (
     <div>
       <nav></nav>
       <Layout>
+          <RestoreAuthOnStart />
         <Routes>
           <Route index element={<Home />} />
           <Route path="/tasks" element={<TasksPage />} />
