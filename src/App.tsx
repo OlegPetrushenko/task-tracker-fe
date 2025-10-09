@@ -11,6 +11,7 @@ import TasksPage from "./pages/Tasks";
 import ResetPassword from "./pages/ResetPassword";
 import ResetPasswordSent from "./pages/ResetPasswordSent";
 import NewPassword from "./pages/NewPassword";
+import ConfirmInviteProject from "./pages/ConfirmInviteProject";
 import RestoreAuthOnStart from "./features/auth/components/RestoreAuthOnStart";
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
           <Route path="/auth/reset-password" element={<ResetPassword />} />
           <Route path="/auth/reset-sent" element={<ResetPasswordSent />} />
           <Route path="/auth/new-password" element={<NewPassword />} />
+          <Route path="/auth/confirm-project" element={<ConfirmInviteProject />} />
         </Routes>
       </Layout>
     </div>
