@@ -48,8 +48,7 @@ const ProfileEditModal: React.FC<Props> = ({
     // Validation: only check avatarUrl format when provided
     const isValid = useMemo(() => {
         const url = trimOrEmpty(form.avatarUrl);
-        const urlOk = url.length === 0 || /^https?:\/\/[^\s]+$/i.test(url);
-        return urlOk;
+        return url.length === 0 || /^https?:\/\/[^\s]+$/i.test(url);
     }, [form.avatarUrl]);
 
     // Dirty flag: enable Save only if something actually changed
