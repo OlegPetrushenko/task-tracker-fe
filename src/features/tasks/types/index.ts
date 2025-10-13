@@ -1,3 +1,5 @@
+import type { ColumnDto } from "../../columns/types";
+
 export interface ExecutorDto {
   id: string;
   fullName: string;
@@ -5,6 +7,12 @@ export interface ExecutorDto {
 }
 
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+
+export interface ColumnRef {
+  id: string;
+  title?: string;
+  orderIndex?: number;
+}
 
 export interface TaskDto {
   id: string;
@@ -15,7 +23,22 @@ export interface TaskDto {
   status: TaskStatus; 
   project?: { id: string; title?: string };
   executors?: ExecutorDto[];
+  column?: ColumnRef;
+  position?: number;
 }
 
-// Убедитесь, что status включен в тип для создания задачи
-export type CreateTaskDto = Omit<TaskDto, "id" | "createdAt">;
+export interface ProjectWithColumnsResponse {
+  id: string;
+  title: string;
+  description?: string;
+  owner: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar: string | null;
+  };
+  ownerAssigned: boolean;
+  columns: ColumnDto[];
+}
+
+export type CreateTaskDto = Omit<TaskDto, "id" | "createdAt" | "column" | "project">;
