@@ -3,7 +3,7 @@ import axiosInstance from "../lib/axiosInstance";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { selectUser } from "../features/auth/slice/authSlice";
 import { selectProjects } from "../features/projects/slice/projectsSlice";
-import ProfileEditModal from "../components/profile/ProfileEditModal";
+import ProfileEditModal from "../components/profile/ProfileEditModal/ProfileEditModal.tsx";
 
 import {
     fetchMyProfile,
