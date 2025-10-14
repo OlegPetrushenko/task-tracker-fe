@@ -4,7 +4,7 @@ import type { CreateTaskDto, TaskDto } from "../types";
 const TASKS_BASE = "/tasks";
 
 export const fetchTasksByProject = async (projectId: string): Promise<TaskDto[]> => {
-  const res = await axiosInstance.get(`${TASKS_BASE}/project/${projectId}`);
+const res = await axiosInstance.get(TASKS_BASE, { params: { projectId } });
   return res.data;
 };
 
