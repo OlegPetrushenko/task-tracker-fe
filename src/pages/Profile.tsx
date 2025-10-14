@@ -1,17 +1,25 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axiosInstance from "../lib/axiosInstance";
-import { useAppSelector } from "../app/hooks";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { selectUser } from "../features/auth/slice/authSlice";
 import { selectProjects } from "../features/projects/slice/projectsSlice";
 import ProfileEditModal from "../components/profile/ProfileEditModal";
 
+import {
+    fetchMyProfile,
+    saveMyProfile,
+    selectProfileData,
+    selectProfileSaving,
+    selectProfileSaveError,
+} from "../features/profile/slice/profileSlice";
+
 /**
  * Profile page / dashboard
  *
- * NOTE: backend endpoints used:
- * GET    /users/profile
- * PUT    /users/profile
- * DELETE /users/profile
+ * Endpoints:
+ * GET    /users/profile          (via slice for modal sync)
+ * PUT    /users/profile          (via slice for modal save; inline editors keep axiosInstance)
+ * DELETE /users/profile          (inline, unchanged)
  */
 
 type UserProfile = {
@@ -37,10 +45,17 @@ type Project = {
 };
 
 const Profile: React.FC = () => {
+    const dispatch = useAppDispatch();
+
     const authUser = useAppSelector(selectUser);
     const projects = useAppSelector(selectProjects);
 
-    const projectsList = React.useMemo(() => projects ?? [], [projects]);
+    // slice-driven profile (kept in sync with local UI state)
+    const profileData = useAppSelector(selectProfileData);
+    const savingViaSlice = useAppSelector(selectProfileSaving);
+    const saveErrorViaSlice = useAppSelector(selectProfileSaveError);
+
+    const projectsList = useMemo(() => projects ?? [], [projects]);
 
     const [user, setUser] = useState<UserProfile | undefined>(authUser);
     const [loading, setLoading] = useState(false);
@@ -51,11 +66,22 @@ const Profile: React.FC = () => {
 
     // modal state
     const [isProfileEditOpen, setProfileEditOpen] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
 
+    // keep local user in sync with store's profile when it changes
+    useEffect(() => {
+        if (profileData) setUser(profileData);
+    }, [profileData]);
+
+    // initial load via slice (for modal/state sync)
+    useEffect(() => {
+        dispatch(fetchMyProfile()).unwrap().catch(() => {
+            /* ignore, keep auth store user */
+        });
+    }, [dispatch]);
+
     const projectCount = projectsList.length;
-    const { totalTasks, completedTasks, missedTasks } = React.useMemo(() => {
+    const { totalTasks, completedTasks, missedTasks } = useMemo(() => {
         let total = 0,
             completed = 0,
             missed = 0;
@@ -75,25 +101,8 @@ const Profile: React.FC = () => {
         return { totalTasks: total, completedTasks: completed, missedTasks: missed };
     }, [projectsList]);
 
-    // fetch profile
-    const fetchProfile = useCallback(async () => {
-        setLoading(true);
-        try {
-            const res = await axiosInstance.get("/users/profile");
-            setUser(res.data);
-        } catch {
-            // ignore, keep auth store user
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchProfile();
-    }, [fetchProfile]);
-
-    // inline editors (keep as-is for email/password current flows)
-    const startEditing = (field: string) => {
+    // inline editors (email/password) only
+    const startEditing = (field: "email" | "password") => {
         setEditingField(field);
         setFormValue((user?.[field as keyof UserProfile] as string) ?? "");
         setMessage(null);
@@ -168,27 +177,29 @@ const Profile: React.FC = () => {
         setProfileEditOpen(false);
     };
 
-    const handleSaveProfile = async (values: typeof initialModalValues) => {
-        setIsSaving(true);
-        setSaveError(null);
-        try {
-            const res = await axiosInstance.put("/users/profile", {
-                displayName: values.displayName,
-                position: values.position,
-                department: values.department,
-                avatarUrl: values.avatarUrl,
-                bio: values.bio,
-            });
-            setUser(res.data);
-            await fetchProfile();
-            setProfileEditOpen(false);
-        } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            setSaveError(error?.response?.data?.message ?? "Failed to update profile");
-        } finally {
-            setIsSaving(false);
-        }
-    };
+    const handleSaveProfile = useCallback(
+        async (values: typeof initialModalValues) => {
+            setSaveError(null);
+            try {
+                const dto = await dispatch(
+                    saveMyProfile({
+                        displayName: values.displayName,
+                        position: values.position,
+                        department: values.department,
+                        avatarUrl: values.avatarUrl,
+                        bio: values.bio,
+                    })
+                ).unwrap();
+
+                setUser(dto);
+                setProfileEditOpen(false);
+            } catch (err: unknown) {
+                const error = err as { response?: { data?: { message?: string } } };
+                setSaveError(error?.response?.data?.message ?? "Failed to update profile");
+            }
+        },
+        [dispatch]
+    );
 
     return (
         <div className="max-w-3xl mx-auto p-6">
@@ -202,12 +213,7 @@ const Profile: React.FC = () => {
                             <div className="font-medium">
                                 {user?.displayName ?? user?.email?.split("@")[0] ?? "—"}
                             </div>
-                            <button
-                                className="text-sm px-2 py-1 border rounded text-blue-600"
-                                onClick={() => startEditing("displayName")}
-                            >
-                                Edit
-                            </button>
+                            {/* inline edit for displayName removed; use modal */}
                         </div>
                     </div>
 
@@ -320,17 +326,18 @@ const Profile: React.FC = () => {
                 </div>
             </div>
 
-            {/* Profile edit modal */}
+            {/* Profile edit modal (slice-powered) */}
             <ProfileEditModal
                 isOpen={isProfileEditOpen}
                 initialValues={initialModalValues}
                 onClose={closeProfileEdit}
                 onSave={handleSaveProfile}
-                isSaving={isSaving}
-                errorMessage={saveError}
+                isSaving={savingViaSlice}
+                errorMessage={saveError ?? saveErrorViaSlice ?? undefined}
             />
         </div>
     );
 };
 
 export default Profile;
+
