@@ -3,6 +3,7 @@ import axiosInstance from "../lib/axiosInstance";
 import { useAppSelector } from "../app/hooks";
 import { selectUser } from "../features/auth/slice/authSlice";
 import { selectProjects } from "../features/projects/slice/projectsSlice";
+import { selectTasksByProject } from "../features/tasks/slice/tasksSlice";
 
 /**
  * Profile page / dashboard
@@ -20,14 +21,14 @@ type UserProfile = {
   role?: string;
 };
 
-type Project = {
-  tasks?: Array<{
-    completed?: boolean;
-    dueDate?: string;
-    endDate?: string;
-    deadline?: string;
-  }>;
-};
+//type Project = {
+//  tasks?: Array<{
+//    completed?: boolean;
+//    dueDate?: string;
+//    endDate?: string;
+//    deadline?: string;
+//  }>;
+//};
 
 const Profile: React.FC = () => {
   const authUser = useAppSelector(selectUser);
@@ -42,25 +43,30 @@ const Profile: React.FC = () => {
   const [formValue, setFormValue] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const tasksByProject = useAppSelector(selectTasksByProject);
 
   const projectCount = projectsList.length;
   const { totalTasks, completedTasks, missedTasks } = React.useMemo(() => {
-    let total = 0, completed = 0, missed = 0;
-    const now = Date.now();
-    for (const p of projectsList) {
-      const tasks = (p as Project).tasks ?? [];
-      total += tasks.length;
-      for (const t of tasks) {
-        if (t?.completed) completed++;
-        const due = t?.dueDate ?? t?.endDate ?? t?.deadline;
-        if (due && !t?.completed) {
-          const d = Date.parse(due);
-          if (!Number.isNaN(d) && d < now) missed++;
-        }
+  let total = 0, completed = 0, missed = 0;
+  const now = Date.now();
+
+  // tasksByProject: Record<string, TaskDto[]>
+  for (const projId in tasksByProject) {
+    const tasks = tasksByProject[projId] || [];
+    total += tasks.length;
+    for (const t of tasks) {
+      if (!t) continue;
+      if (t.status === "DONE") completed++;
+      const due = t.dueDate;
+      if (due && t.status !== "DONE") {
+        const d = Date.parse(due);
+        if (!Number.isNaN(d) && d < now) missed++;
       }
     }
-    return { totalTasks: total, completedTasks: completed, missedTasks: missed };
-  }, [projectsList]);
+  }
+
+  return { totalTasks: total, completedTasks: completed, missedTasks: missed };
+}, [tasksByProject]);
 
   useEffect(() => {
     const fetchProfile = async () => {
