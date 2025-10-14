@@ -5,6 +5,7 @@ import Layout from "./layouts/Layout";
 import Registration from "./pages/Registration";
 import Login from "./pages/Login";
 import Projects from "./pages/Projects";
+import ProjectKanban from "./pages/ProjectKanban";
 import Profile from "./pages/Profile";
 import ConfirmPage from "./pages/Confirm";
 import TasksPage from "./pages/Tasks";
@@ -33,7 +34,6 @@ function App() {
 
   return (
     <div>
-
       {shouldRestoreAuth && <RestoreAuthOnStart />}
       <Layout>
         <Routes>
@@ -43,6 +43,7 @@ function App() {
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />
           <Route path="/projects" element={<Projects />} />          
+          <Route path="/project/:projectId/kanban" element={<ProjectKanban />} />          
           <Route path="/profile" element={<Profile />} />         
           <Route path="/confirm" element={<ConfirmPage />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
