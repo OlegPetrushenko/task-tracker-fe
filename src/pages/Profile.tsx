@@ -12,6 +12,7 @@ import {
     selectProfileSaving,
     selectProfileSaveError,
 } from "../features/profile/slice/profileSlice";
+import { selectTasksByProject } from "../features/tasks/slice/tasksSlice";
 
 /**
  * Profile page / dashboard
@@ -35,14 +36,14 @@ type UserProfile = {
     bio?: string;
 };
 
-type Project = {
-    tasks?: Array<{
-        completed?: boolean;
-        dueDate?: string;
-        endDate?: string;
-        deadline?: string;
-    }>;
-};
+//type Project = {
+//  tasks?: Array<{
+//    completed?: boolean;
+//    dueDate?: string;
+//    endDate?: string;
+//    deadline?: string;
+//  }>;
+//};
 
 const Profile: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -79,27 +80,30 @@ const Profile: React.FC = () => {
             /* ignore, keep auth store user */
         });
     }, [dispatch]);
+  const tasksByProject = useAppSelector(selectTasksByProject);
 
-    const projectCount = projectsList.length;
-    const { totalTasks, completedTasks, missedTasks } = useMemo(() => {
-        let total = 0,
-            completed = 0,
-            missed = 0;
-        const now = Date.now();
-        for (const p of projectsList) {
-            const tasks = (p as Project).tasks ?? [];
-            total += tasks.length;
-            for (const t of tasks) {
-                if (t?.completed) completed++;
-                const due = t?.dueDate ?? t?.endDate ?? t?.deadline;
-                if (due && !t?.completed) {
-                    const d = Date.parse(due);
-                    if (!Number.isNaN(d) && d < now) missed++;
-                }
-            }
-        }
-        return { totalTasks: total, completedTasks: completed, missedTasks: missed };
-    }, [projectsList]);
+  const projectCount = projectsList.length;
+  const { totalTasks, completedTasks, missedTasks } = React.useMemo(() => {
+  let total = 0, completed = 0, missed = 0;
+  const now = Date.now();
+
+  // tasksByProject: Record<string, TaskDto[]>
+  for (const projId in tasksByProject) {
+    const tasks = tasksByProject[projId] || [];
+    total += tasks.length;
+    for (const t of tasks) {
+      if (!t) continue;
+      if (t.status === "DONE") completed++;
+      const due = t.dueDate;
+      if (due && t.status !== "DONE") {
+        const d = Date.parse(due);
+        if (!Number.isNaN(d) && d < now) missed++;
+      }
+    }
+  }
+
+  return { totalTasks: total, completedTasks: completed, missedTasks: missed };
+}, [tasksByProject]);
 
     // inline editors (email/password) only
     const startEditing = (field: "email" | "password") => {
