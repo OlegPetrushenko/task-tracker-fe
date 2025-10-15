@@ -41,4 +41,4 @@ export interface ProjectWithColumnsResponse {
   columns: ColumnDto[];
 }
 
-export type CreateTaskDto = Omit<TaskDto, "id" | "createdAt" | "column" | "project">;
+export type CreateTaskDto = Omit<TaskDto, "id" | "createdAt">;

@@ -42,11 +42,19 @@ export const tasksSlice = createAppSlice({
       }
     ),
 
-    createTask: create.asyncThunk(
-        async (payload: { projectId: string; dto: Partial<TaskDto> }) => {
-     const dto: CreateTaskDto = {
+createTask: create.asyncThunk(
+  async (payload: { projectId: string; columnId: string; dto: Partial<TaskDto> }) => {
+    // Попытка взять column.title из payload.dto (если форма передавала его)
+    const providedColumn = (payload.dto as Partial<TaskDto>)?.column;
+
+    const dto: CreateTaskDto = {
       ...(payload.dto as CreateTaskDto),
       project: { id: payload.projectId },
+      // Если в dto уже есть column.title — используем оба поля; 
+      // иначе оставляем title как undefined (форму лучше исправить так, чтобы она всегда передавала title)
+      column: providedColumn?.title
+        ? { id: payload.columnId, title: providedColumn.title }
+        : { id: payload.columnId, title: (providedColumn && providedColumn.title) ?? undefined },
     };
 
     return api.createTask(dto).catch((err) => {
