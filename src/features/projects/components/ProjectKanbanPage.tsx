@@ -15,7 +15,7 @@ const formatDate = (dateString: string | null | undefined): string => {
             month: '2-digit',
             year: 'numeric',
         });
-    } catch (e) {
+    } catch {
         return dateString;
     }
 };
