@@ -1,18 +1,22 @@
 import { createAppSlice } from "../../../app/createAppSlice";
 import * as api from "../services/api";
+import * as taskApi from "../../tasks/services/api";
 import type { ColumnDto } from "../types";
-import type { ProjectWithColumnsResponse } from "../../tasks/types";
+import type { ProjectWithColumnsResponse, TaskDto } from "../../tasks/types";
+import { type MoveTaskDto } from "../../tasks/services/api";
 
 type ColumnsState = {
   columnsByProject: Record<string, ColumnDto[]>;
   isLoading: boolean;
   error?: string | null;
+  columnActionError: string | null;
 };
 
 const initialState: ColumnsState = {
   columnsByProject: {},
   isLoading: false,
   error: null,
+  columnActionError: null,
 };
 
 export const columnsSlice = createAppSlice({
@@ -27,6 +31,7 @@ export const columnsSlice = createAppSlice({
       {
         pending: (state) => {
           state.isLoading = true;
+          state.columnActionError = null;
         },
         fulfilled: (state, action) => {
           state.isLoading = false;
@@ -49,7 +54,11 @@ export const columnsSlice = createAppSlice({
           state.columnsByProject[projId] = [
             ...(state.columnsByProject[projId] || []), action.payload
           ];
+          state.columnActionError = null;
         },
+        rejected: (state, action) => {
+          state.columnActionError = action.error.message || "Failed to create column.";
+        }
       }
     ),
 
@@ -64,7 +73,11 @@ export const columnsSlice = createAppSlice({
           state.columnsByProject[projId] = state.columnsByProject[projId].map(col =>
             col.id === updated.id ? updated : col
           );
+          state.columnActionError = null;
         },
+        rejected: (state, action) => {
+          state.columnActionError = action.error.message || "Failed to update column.";
+        }
       }
     ),
 
@@ -77,6 +90,73 @@ export const columnsSlice = createAppSlice({
         fulfilled: (state, action) => {
           const { columnId, projectId } = action.payload;
           state.columnsByProject[projectId] = state.columnsByProject[projectId].filter(c => c.id !== columnId);
+          state.columnActionError = null;
+        },
+        rejected: (state, action) => {
+          state.columnActionError = action.error.message || "Failed to delete column. Standard columns cannot be deleted.";
+        }
+      }
+    ),
+
+    moveTask: create.asyncThunk(
+      async (
+        { projectId, taskId, dto }: { projectId: string; taskId: string; dto: MoveTaskDto },
+        { rejectWithValue }
+      ) => {
+        try {
+          const updatedTask = await taskApi.moveTask(projectId, taskId, dto);
+          return updatedTask;
+        } catch (error) {
+          const errorMessage = (error instanceof Error) ? error.message : "An unknown error occurred.";
+          return rejectWithValue(errorMessage);
+        }
+      },
+      {
+        pending: (state, action) => {
+          const { projectId, taskId, dto } = action.meta.arg;
+          const targetColumnId = dto.columnId;
+          const newPosition = dto.position;
+
+          const columns = state.columnsByProject[projectId];
+
+          if (!columns) return;
+
+          let movedTask: TaskDto | undefined;
+          columns.forEach(col => {
+            if (col.tasks) {
+              col.tasks = col.tasks.filter(task => {
+                if (task.id === taskId) {
+                  movedTask = { ...task, column: { id: targetColumnId }, position: newPosition };
+                  return false;
+            }
+              return true;
+            });
+            }
+          });
+
+          if (movedTask) {
+            const targetColumn = columns.find(col => col.id === targetColumnId);
+            if (targetColumn) {
+              if (!targetColumn.tasks) {
+                targetColumn.tasks = [];
+              }
+
+              targetColumn.tasks.splice(newPosition, 0, movedTask);
+
+              targetColumn.tasks.forEach((task, index) => {
+                task.position = index;
+              });
+
+              state.columnActionError = null;
+            }
+          }
+        },
+        fulfilled: (state) => {
+          state.columnActionError = null;
+        },
+        rejected: (state, action) => {
+          state.columnActionError = action.payload as string || "Failed to move task. Reverting changes.";
+        //   dispatch(fetchColumns(projectId));
         },
       }
     ),
@@ -93,6 +173,7 @@ export const {
   createColumn,
   updateColumn,
   deleteColumn,
+  moveTask,
 } = columnsSlice.actions;
 
 export const {
