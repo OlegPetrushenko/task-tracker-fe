@@ -8,6 +8,13 @@ export interface MoveTaskDto {
   position: number;
 }
 
+export interface MoveTaskArgs {
+  projectId: string;
+  taskId: string;
+  dto: MoveTaskDto;
+  sourceColumnId: string;
+}
+
 /**
  * Moves a task to a new column and/or updates its position.
  * API: POST /projects/{projectId}/tasks/{taskId}/move

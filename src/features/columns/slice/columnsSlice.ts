@@ -2,14 +2,15 @@ import { createAppSlice } from "../../../app/createAppSlice";
 import * as api from "../services/api";
 import * as taskApi from "../../tasks/services/api";
 import type { ColumnDto } from "../types";
-import type { ProjectWithColumnsResponse, TaskDto } from "../../tasks/types";
-import { type MoveTaskDto } from "../../tasks/services/api";
+import type { ProjectWithColumnsResponse, TaskDto, CreateTaskDto } from "../../tasks/types";
+import { type MoveTaskArgs } from "../../tasks/services/api";
 
 type ColumnsState = {
   columnsByProject: Record<string, ColumnDto[]>;
   isLoading: boolean;
   error?: string | null;
   columnActionError: string | null;
+  taskActionError: string | null;
 };
 
 const initialState: ColumnsState = {
@@ -17,6 +18,7 @@ const initialState: ColumnsState = {
   isLoading: false,
   error: null,
   columnActionError: null,
+  taskActionError: null,
 };
 
 export const columnsSlice = createAppSlice({
@@ -98,9 +100,56 @@ export const columnsSlice = createAppSlice({
       }
     ),
 
+    createTaskThunk: create.asyncThunk(
+      async (dto: CreateTaskDto) => {
+        return await taskApi.createTask(dto);
+      },
+      {
+        fulfilled: (state, action) => {
+          const newTask = action.payload;
+          const projId = newTask.project?.id;
+          const targetColumnId = newTask.column?.id;
+
+          if (projId && targetColumnId && state.columnsByProject[projId]) {
+            const targetColumn = state.columnsByProject[projId].find(col => col.id === targetColumnId);
+            if (targetColumn) {
+              if (!targetColumn.tasks) {
+                targetColumn.tasks = [];
+              }
+              targetColumn.tasks.push(newTask);
+              state.taskActionError = null;
+            }
+          }
+        },
+        rejected: (state, action) => {
+          state.taskActionError = action.error.message || "Failed to create task.";
+        }
+      }
+    ),
+
+    updateTaskInStore: create.reducer(
+      (state, action: { payload: TaskDto }) => {
+        const updatedTask = action.payload;
+        const projId = updatedTask.project?.id;
+        const targetColumnId = updatedTask.column?.id;
+
+        if (projId && targetColumnId && state.columnsByProject[projId]) {
+          const columns = state.columnsByProject[projId];
+          columns.forEach(col => {
+            if (col.tasks) {
+              const taskIndex = col.tasks.findIndex(t => t.id === updatedTask.id);
+              if (taskIndex !== -1) {
+                col.tasks[taskIndex] = updatedTask;
+              }
+            }
+          });
+        }
+      }
+    ),
+
     moveTask: create.asyncThunk(
       async (
-        { projectId, taskId, dto }: { projectId: string; taskId: string; dto: MoveTaskDto },
+        { projectId, taskId, dto }: MoveTaskArgs,
         { rejectWithValue }
       ) => {
         try {
@@ -113,7 +162,7 @@ export const columnsSlice = createAppSlice({
       },
       {
         pending: (state, action) => {
-          const { projectId, taskId, dto } = action.meta.arg;
+          const { projectId, taskId, dto, sourceColumnId } = action.meta.arg;
           const targetColumnId = dto.columnId;
           const newPosition = dto.position;
 
@@ -143,11 +192,16 @@ export const columnsSlice = createAppSlice({
 
               targetColumn.tasks.splice(newPosition, 0, movedTask);
 
-              targetColumn.tasks.forEach((task, index) => {
-                task.position = index;
+              columns.forEach(col => {
+                if (col.tasks) {
+                  col.tasks.forEach((task, index) => {
+                    if (col.id === targetColumnId || col.id === sourceColumnId) {
+                      task.position = index;
+                    }
+                  });
+                }
               });
-
-              state.columnActionError = null;
+              state.taskActionError = null;
             }
           }
         },
@@ -174,6 +228,8 @@ export const {
   updateColumn,
   deleteColumn,
   moveTask,
+  createTaskThunk,
+  updateTaskInStore,
 } = columnsSlice.actions;
 
 export const {

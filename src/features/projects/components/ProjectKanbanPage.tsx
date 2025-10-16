@@ -6,13 +6,71 @@ import {
     selectColumnsByProject,
     selectColumnsLoading,
     moveTask,
+    createTaskThunk,
+    updateTaskInStore,
+    createColumn,
 } from "../../columns/slice/columnsSlice";
 import { selectProjects } from "../../projects/slice/projectsSlice";
 import type { ColumnDto } from "../../columns/types";
-import type { TaskDto, ExecutorDto } from "../../tasks/types";
+import type { TaskDto, ExecutorDto, CreateTaskDto } from "../../tasks/types";
 import type { ProjectWithColumnsResponse } from "../../tasks/types";
 import type { MoveTaskDto } from "../../tasks/services/api";
 import { EllipsisVertical, Plus } from "lucide-react";
+
+interface TaskModalProps {
+    task: TaskDto | null;
+    onClose: () => void;
+    onUpdate: (task: TaskDto) => void;
+}
+const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdate }) => {
+    if (!task) return null;
+    const [isEditing, setIsEditing] = useState(false);
+    const [title, setTitle] = useState(task.title);
+
+    const handleSave = () => {
+        const updatedTask: TaskDto = { ...task, title: title }; // const result = await taskApi.updateTask(task.id, { title: title });
+        onUpdate(updatedTask);
+        setIsEditing(false);
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-96">
+                <h2 className="text-xl font-bold mb-4">{task.title} (Task View/Edit)</h2>
+                {isEditing ? (
+                    <div>
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="border p-2 w-full mb-4"
+                        />
+                        <button
+                            onClick={handleSave}
+                            className="bg-blue-500 text-white p-2 rounded mr-2"
+                        >
+                            Save
+                        </button>
+                    </div>
+                ) : (
+                    <div>
+                        <p className="mb-4">Description: {task.description || "N/A"}</p>
+                        <button
+                            onClick={() => setIsEditing(true)}
+                            className="bg-yellow-500 text-white p-2 rounded mr-2"
+                        >
+                            Edit
+                        </button>
+                    </div>
+                )}
+                <button onClick={onClose} className="bg-gray-500 text-white p-2 rounded">
+                    Close
+                </button>
+            </div>
+        </div>
+    );
+};
 
 const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return "";
@@ -66,18 +124,31 @@ interface KanbanTaskCardProps {
     task: TaskDto;
     projectOwner: OwnerDto | undefined;
     currentColumnId: string;
+    isTarget: boolean; 
+    onClick: (task: TaskDto) => void; 
 }
 
-const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({ task, projectOwner, currentColumnId }) => {
+const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({
+    task,
+    projectOwner,
+    currentColumnId,
+    isTarget,
+    onClick,
+}) => {
     const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+    const targetClass = isTarget
+        ? "border-4 border-dashed border-blue-600 ring-2 ring-blue-600 bg-blue-50"
+        : "";
 
     return (
         <div
             key={task.id}
-            className="bg-white p-3 rounded-lg shadow-sm border cursor-grab hover:border-blue-500 transition active:cursor-grabbing"
+            className={`bg-white p-3 rounded-lg shadow-sm border cursor-grab hover:border-blue-500 transition active:cursor-grabbing mb-3 ${targetClass}`}
             draggable
+            onClick={() => onClick(task)}
             onDragStart={(e) => {
                 e.dataTransfer.setData("taskId", task.id);
+                e.dataTransfer.setData("isTaskDrag", "true");
                 if (currentColumnId) {
                     e.dataTransfer.setData("sourceColumnId", currentColumnId);
                 } else {
@@ -135,21 +206,53 @@ interface KanbanColumnProps {
         mouseY: number,
         tasksInTarget: TaskDto[]
     ) => void;
+    onTaskClick: (task: TaskDto) => void; 
+    draggedTaskId: string | null; 
+    targetTaskDropIndex: number | null;
+    onAddTask: (columnId: string) => void;
+    targetColumnDropId: string | null;
 }
 
-const KanbanColumn: React.FC<KanbanColumnProps> = ({ column, projectOwner, onDropTask }) => {
+const KanbanColumn: React.FC<KanbanColumnProps> = ({
+    column,
+    projectOwner,
+    onDropTask,
+    onTaskClick,
+    draggedTaskId,
+    targetTaskDropIndex,
+    onAddTask,
+    targetColumnDropId,
+}) => {
     const columnRef = useRef<HTMLDivElement>(null);
     const [isDragOver, setIsDragOver] = useState(false);
+    // const [isTaskDragOver, setIsTaskDragOver] = useState(false);
 
     const columnTasks = useMemo(
         () => [...(column.tasks || [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
         [column.tasks]
     );
 
+    const calculateDropIndex = (e: React.DragEvent, taskElements: HTMLElement[]): number => {
+        const mouseY = e.clientY;
+        for (let i = 0; i < taskElements.length; i++) {
+            const el = taskElements[i];
+            const rect = el.getBoundingClientRect();
+            const middleY = rect.top + rect.height / 2;
+            if (mouseY < middleY) {
+                return i;
+            }
+        }
+        return taskElements.length; 
+    };
+
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
-        if (!isDragOver) setIsDragOver(true);
+
+        const isTaskDrag = e.dataTransfer.getData("isTaskDrag") === "true"; 
+        if (isTaskDrag) {
+            // Логика для подсчета индекса и обновления стейта в родительском компоненте
+        }
     };
 
     const handleDragLeave = () => {
@@ -159,24 +262,46 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ column, projectOwner, onDro
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragOver(false);
+        const isTaskDrag = e.dataTransfer.getData("isTaskDrag") === "true";
 
         const taskId = e.dataTransfer.getData("taskId");
         const sourceColumnId = e.dataTransfer.getData("sourceColumnId");
         const targetColumnId = column.id;
         const mouseY = e.clientY;
 
-        if (taskId && sourceColumnId) {
-            onDropTask(taskId, sourceColumnId, targetColumnId, mouseY, columnTasks);
+        if (isTaskDrag) {
+            const taskId = e.dataTransfer.getData("taskId");
+            const sourceColumnId = e.dataTransfer.getData("sourceColumnId");
+            const targetColumnId = column.id;
+            const mouseY = e.clientY;
+
+            if (taskId && sourceColumnId) {
+                const taskListElement = document.getElementById(`task-list-${targetColumnId}`);
+                let insertionIndex = columnTasks.length; 
+
+                if (taskListElement) {
+                    const taskElements = Array.from(
+                        taskListElement.querySelectorAll<HTMLElement>('[draggable="true"]')
+                    );
+                    const visibleTaskElements = taskElements.filter(
+                        (el) => el.getAttribute("data-task-id") !== taskId
+                    );
+                    insertionIndex = calculateDropIndex(e, taskElements);
+                } 
+
+                onDropTask(taskId, sourceColumnId, targetColumnId, mouseY, columnTasks);
+            }
         }
     };
+
+    const columnHighlightClass =
+        targetColumnDropId === column.id ? "ring-4 ring-green-500 ring-offset-2" : ""; 
 
     return (
         <div
             ref={columnRef}
             key={column.id}
-            className={`bg-gray-100 p-3 rounded-xl shadow-md min-h-96 flex flex-col max-h-[90vh] transition-all duration-200
-                ${isDragOver ? "ring-4 ring-blue-500 ring-offset-2" : ""}
-            `}
+            className={`bg-gray-100 p-3 rounded-xl shadow-md min-h-96 flex flex-col max-h-[90vh] transition-all duration-200 ${columnHighlightClass}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -197,16 +322,25 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ column, projectOwner, onDro
                 {columnTasks.length === 0 && (
                     <div className="text-sm text-gray-500 p-2 italic text-center">No tasks</div>
                 )}
-                {columnTasks.map((task: TaskDto) => (
+                {columnTasks.map((task: TaskDto, index: number) => (
                     <KanbanTaskCard
                         key={task.id}
                         task={task}
                         projectOwner={projectOwner}
                         currentColumnId={column.id}
+                        onClick={onTaskClick}
+                        isTarget={
+                            draggedTaskId !== null &&
+                            column.id === targetColumnDropId &&
+                            index === targetTaskDropIndex
+                        }
                     />
                 ))}
                 {/* Button "Add Task" */}
-                <button className="w-full text-left p-3 text-sm text-gray-500 hover:text-blue-600 hover:bg-gray-200 rounded-lg transition duration-150 flex items-center">
+                <button
+                    onClick={() => onAddTask(column.id)}
+                    className="w-full text-left p-3 text-sm text-gray-500 hover:text-blue-600 hover:bg-gray-200 rounded-lg transition duration-150 flex items-center"
+                >
                     <Plus className="h-5 w-5 mr-1" />
                     Add Task
                 </button>
@@ -221,6 +355,11 @@ export default function ProjectKanbanPage() {
     const { projectId } = useParams<{ projectId: string }>();
     const dispatch = useAppDispatch();
     const projects = useAppSelector(selectProjects);
+
+    const [selectedTask, setSelectedTask] = useState<TaskDto | null>(null); 
+    const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null); 
+    const [targetTaskDropIndex, setTargetTaskDropIndex] = useState<number | null>(null); 
+    const [targetColumnDropId, setTargetColumnDropId] = useState<string | null>(null); 
 
     const columns = useAppSelector((state) => {
         if (!projectId) return [];
@@ -245,6 +384,22 @@ export default function ProjectKanbanPage() {
 
     // --- Drag and Drop Logic ---
 
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, columnId: string) => {
+        e.dataTransfer.setData("columnId", columnId); 
+    };
+
+    const handleDragEnterColumn = (e: React.DragEvent<HTMLDivElement>, columnId: string) => {
+        if (e.dataTransfer.types.includes("taskId")) {
+            setTargetColumnDropId(columnId); 
+        } 
+    };
+
+    const handleDragLeaveColumn = (e: React.DragEvent<HTMLDivElement>, columnId: string) => {
+        if (targetColumnDropId === columnId) {
+            // setTargetColumnDropId(null); 
+        }
+    };
+
     const handleDropTask = (
         taskId: string,
         sourceColumnId: string,
@@ -252,38 +407,67 @@ export default function ProjectKanbanPage() {
         mouseY: number,
         tasksInTarget: TaskDto[]
     ) => {
-        // if (!projectId || sourceColumnId === targetColumnId) return;
         if (!projectId) return;
 
         let insertionIndex = tasksInTarget.length;
 
-        if (tasksInTarget.length === 0) {
-            insertionIndex = 0;
-        } else {
-            const taskListElement = document.getElementById(`task-list-${targetColumnId}`);
-            if (taskListElement) {
-                const taskElements = Array.from(
-                    taskListElement.querySelectorAll<HTMLElement>('[draggable="true"]')
-                );
+        const taskListElement = document.getElementById(`task-list-${targetColumnId}`);
+        if (taskListElement) {
+            const taskElements = Array.from(
+                taskListElement.querySelectorAll<HTMLElement>('[draggable="true"]')
+            );
 
-                insertionIndex = taskElements.length; // По умолчанию в конец
+            insertionIndex = taskElements.length; 
 
-                for (let i = 0; i < taskElements.length; i++) {
-                    const el = taskElements[i];
-                    const rect = el.getBoundingClientRect();
-                    const middleY = rect.top + rect.height / 2;
+            for (let i = 0; i < taskElements.length; i++) {
+                const el = taskElements[i];
+                const rect = el.getBoundingClientRect();
+                const middleY = rect.top + rect.height / 2;
 
-                    if (mouseY < middleY) {
-                        insertionIndex = i;
-                        break;
-                    }
+                if (mouseY < middleY) {
+                    insertionIndex = i;
+                    break;
                 }
             }
         }
 
         const moveDto: MoveTaskDto = { columnId: targetColumnId, position: insertionIndex };
 
-        dispatch(moveTask({ projectId, taskId, dto: moveDto }));
+        dispatch(moveTask({ projectId, taskId, dto: moveDto, sourceColumnId }));
+
+        setDraggedTaskId(null);
+        setTargetColumnDropId(null);
+        setTargetTaskDropIndex(null);
+    };
+
+    const handleTaskClick = (task: TaskDto) => {
+        setSelectedTask(task);
+    }; 
+
+    const handleTaskModalClose = () => {
+        setSelectedTask(null);
+    };
+
+    const handleTaskUpdate = (updatedTask: TaskDto) => {
+        dispatch(updateTaskInStore(updatedTask)); 
+    }; 
+
+    const handleAddTask = (columnId: string) => {
+        if (!projectId) return;
+
+        const taskToCreate: CreateTaskDto = {
+            title: "New Task Title", 
+            status: "TODO",
+            project: { id: projectId },
+            column: { id: columnId }, 
+        }; 
+
+        dispatch(createTaskThunk(taskToCreate as any)); 
+    }
+
+    const handleAddColumn = () => {
+        if (!projectId) return; 
+        dispatch(createColumn({ projectId, title: "New Column" }));
     };
 
     if (!projectId) return <div className="p-4 text-red-500">No project selected</div>;
@@ -311,17 +495,24 @@ export default function ProjectKanbanPage() {
                         key={column.id}
                         id={`column-${column.id}`}
                         className="flex-shrink-0 w-80 h-full"
+                        onDragEnter={(e) => handleDragEnterColumn(e, column.id)}
+                        onDragLeave={(e) => handleDragLeaveColumn(e, column.id)}
                     >
                         <KanbanColumn
                             column={column}
                             projectOwner={projectOwner}
                             onDropTask={handleDropTask}
+                            onTaskClick={handleTaskClick}
+                            draggedTaskId={draggedTaskId}
+                            targetTaskDropIndex={targetTaskDropIndex}
+                            onAddTask={handleAddTask}
+                            targetColumnDropId={targetColumnDropId}
                         />
                     </div>
                 ))}
                 <div className="flex-shrink-0 w-80 p-3">
                     <button
-                        // onClick={() => dispatch(createColumn({ projectId, title: "New column" }))}
+                        onClick={handleAddColumn}
                         className="w-full h-full bg-gray-200 border-2 border-dashed border-gray-400 text-gray-600 rounded-xl flex items-center justify-center hover:bg-gray-300 transition duration-150"
                         title="Add new column"
                     >
@@ -330,6 +521,12 @@ export default function ProjectKanbanPage() {
                     </button>
                 </div>
             </div>
+
+            <TaskModal
+                task={selectedTask}
+                onClose={handleTaskModalClose}
+                onUpdate={handleTaskUpdate}
+            />
         </div>
     );
 }
