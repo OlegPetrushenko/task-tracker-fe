@@ -5,7 +5,7 @@ import { authSlice } from "../features/auth/slice/authSlice";
 import { projectsSlice } from "../features/projects/slice/projectsSlice";
 import { tasksSlice } from "../features/tasks/slice/tasksSlice";
 import { profileSlice } from "../features/profile/slice/profileSlice";
-import { columnsSlice } from "../features/columns/slice/columnsSlice";
+import { columnsSlice } from "../features/kanban/slice/kanbanSlice";
 
 // `combineSlices` automatically combines the reducers using
 // their `reducerPath`s, therefore we no longer need to call `combineReducers`.

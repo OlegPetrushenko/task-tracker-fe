@@ -2,7 +2,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { createTask, updateTask } from "../slice/tasksSlice";
-import { selectColumnsByProject } from "../../columns/slice/columnsSlice";
+import { selectColumnsByProject } from "../../kanban/slice/kanbanSlice";
 import type { TaskDto } from "../types";
 
 type Props = {

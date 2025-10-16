@@ -1,4 +1,4 @@
-import type { ColumnDto } from "../../columns/types";
+import type { ColumnDto } from "../../kanban/types";
 
 export interface ExecutorDto {
   id: string;
