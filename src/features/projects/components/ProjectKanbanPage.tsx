@@ -13,7 +13,7 @@ import {
 import { selectProjects } from "../../projects/slice/projectsSlice";
 import type { ColumnDto } from "../../kanban/types";
 import type { TaskDto, CreateTaskDto } from "../../tasks/types";
-import type { ProjectWithColumnsResponse } from "../../tasks/types";
+import type { ProjectWithColumnsResponse } from "../../projects/types";
 import type { MoveTaskDto } from "../../tasks/services/api";
 import { Plus } from "lucide-react";
 import { KanbanColumn } from "../../kanban/components/KanbanColumn";
@@ -36,7 +36,9 @@ export default function ProjectKanbanPage() {
 
     const isLoading = useAppSelector(selectColumnsLoading);
     const currentProject = projects.find((p) => p.id === projectId);
-    const projectOwner = (currentProject as unknown as ProjectWithColumnsResponse)?.owner;
+    const projectOwner = currentProject
+        ? (currentProject as ProjectWithColumnsResponse).owner
+        : undefined;
 
     useEffect(() => {
         if (projectId) {
@@ -132,7 +134,7 @@ export default function ProjectKanbanPage() {
             column: { id: columnId },
         };
 
-        dispatch(createTaskThunk(taskToCreate as any));
+        dispatch(createTaskThunk(taskToCreate));
     };
 
     const handleAddColumn = () => {

@@ -2,7 +2,7 @@ import React from "react";
 import { formatDate } from "../../../utils/formatDate";
 import { TaskExecutors } from "./TaskExecutors";
 import type { TaskDto } from "../../tasks/types";
-import type { ProjectWithColumnsResponse } from "../../tasks/types";
+import type { ProjectWithColumnsResponse } from "../../projects/types";
 
 type OwnerDto = ProjectWithColumnsResponse["owner"];
 

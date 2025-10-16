@@ -4,7 +4,7 @@ import { KanbanTaskCard } from "./KanbanTaskCard";
 import { TargetDropIndicator } from "./TargetDropIndicator";
 import type { ColumnDto } from "../../kanban/types";
 import type { TaskDto } from "../../tasks/types";
-import type { ProjectWithColumnsResponse } from "../../tasks/types";
+import type { ProjectWithColumnsResponse } from "../../projects/types";
 
 type OwnerDto = ProjectWithColumnsResponse["owner"];
 

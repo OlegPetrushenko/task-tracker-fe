@@ -1,6 +1,6 @@
 import React from "react";
 import type { ExecutorDto } from "../../tasks/types";
-import type { ProjectWithColumnsResponse } from "../../tasks/types";
+import type { ProjectWithColumnsResponse } from "../../projects/types";
 
 type OwnerDto = ProjectWithColumnsResponse["owner"];
 

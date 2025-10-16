@@ -1,7 +1,7 @@
 import axiosInstance from "../../../lib/axiosInstance";
 import type { ColumnDto } from "../types";
 import { PROJECTS_BASE_PATH, COLUMNS_BASE_PATH } from "../../apiPaths";
-import type { ProjectWithColumnsResponse } from "../../tasks/types";
+import type { ProjectWithColumnsResponse } from "../../projects/types";
 
 export async function fetchColumns(projectId: string) {
   return axiosInstance.get<ProjectWithColumnsResponse>(`${PROJECTS_BASE_PATH}/${projectId}/columns`).then(res => res.data);

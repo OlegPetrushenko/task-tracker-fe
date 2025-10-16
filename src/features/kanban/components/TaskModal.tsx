@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import type { TaskDto } from "../../tasks/types";
+import type { TaskDto, TaskDtoWithProjectOwner } from "../../tasks/types";
 import { updateTask } from "../../tasks/services/api"; 
 import { formatDate } from "../../../utils/formatDate"; 
 
 interface TaskModalProps {
-    task: TaskDto | null;
+    task: TaskDto | TaskDtoWithProjectOwner | null;
     onClose: () => void;
     onUpdate: (task: TaskDto) => void;
 }
@@ -14,7 +14,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdate })
     const [isEditing, setIsEditing] = useState(false);
     const [title, setTitle] = useState(task?.title || "");
     const [description, setDescription] = useState(task?.description || "");
-    const projectOwner = (task as any)?.project?.owner;
+    const projectOwner = (task as TaskDtoWithProjectOwner)?.project?.owner;
 
     useEffect(() => {
         if (task) {
