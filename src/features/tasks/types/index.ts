@@ -1,4 +1,5 @@
-import type { ColumnDto } from "../../columns/types";
+import type { ColumnRef } from "../../kanban/types";
+import type { ProjectRefWithOwner } from "../../projects/types";
 
 export interface ExecutorDto {
   id: string;
@@ -7,12 +8,6 @@ export interface ExecutorDto {
 }
 
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
-
-export interface ColumnRef {
-  id: string;
-  title?: string;
-  orderIndex?: number;
-}
 
 export interface TaskDto {
   id: string;
@@ -27,18 +22,8 @@ export interface TaskDto {
   position?: number;
 }
 
-export interface ProjectWithColumnsResponse {
-  id: string;
-  title: string;
-  description?: string;
-  owner: {
-    id: string;
-    name: string | null;
-    email: string;
-    avatar: string | null;
-  };
-  ownerAssigned: boolean;
-  columns: ColumnDto[];
-}
+export type CreateTaskDto = Omit<TaskDto, "id" | "createdAt" | "executors">;
 
-export type CreateTaskDto = Omit<TaskDto, "id" | "createdAt">;
+export interface TaskDtoWithProjectOwner extends Omit<TaskDto, "project"> {
+    project?: ProjectRefWithOwner;
+}
