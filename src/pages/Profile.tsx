@@ -62,7 +62,6 @@ const Profile: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [editingField, setEditingField] = useState<string | null>(null);
     const [formValue, setFormValue] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
     const [currentPassword, setCurrentPassword] = useState("");
@@ -289,14 +288,7 @@ const Profile: React.FC = () => {
                     <div>
                         <div className="text-sm text-gray-500 mb-1">Password</div>
                         <div className="flex items-center gap-2">
-                            <div className="font-medium">{showPassword ? "••••••••" : "••••••••"}</div>
-                            <button
-                                className="text-sm px-2 py-1 border rounded"
-                                onClick={() => setShowPassword((s) => !s)}
-                                aria-label="Toggle password visibility"
-                            >
-                                {showPassword ? "Hide" : "Show"}
-                            </button>
+                            <div className="font-medium">••••••••</div>
                             <button
                                 className="text-sm px-2 py-1 border rounded text-blue-600"
                                 onClick={() => startEditing("password")}
