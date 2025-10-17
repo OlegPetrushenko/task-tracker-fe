@@ -62,8 +62,11 @@ const Profile: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [editingField, setEditingField] = useState<string | null>(null);
     const [formValue, setFormValue] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
+
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
     // modal state
     const [isProfileEditOpen, setProfileEditOpen] = useState(false);
@@ -110,12 +113,58 @@ const Profile: React.FC = () => {
         setEditingField(field);
         setFormValue((user?.[field as keyof UserProfile] as string) ?? "");
         setMessage(null);
+
+        if (field === "password") {
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+            setFormValue("");
+        } else {
+            setFormValue((user?.[field as keyof UserProfile] as string) ?? "");
+        }
     };
 
     const cancelEditing = () => {
         setEditingField(null);
         setFormValue("");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
     };
+
+    const savePasswordField = async () => {
+        setLoading(true);
+        setMessage(null);
+
+        try {
+            if (newPassword !== confirmPassword) {
+                setMessage("The new password and confirmation do not match");
+                return;
+            }
+
+            await axiosInstance.post("/users/profile/change-password", {
+                currentPassword,
+                newPassword,
+                confirmPassword,
+            });
+
+            setMessage("Password has been successfully changed");
+            setEditingField(null);
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+            setFormValue("");
+        } catch (err: unknown) {
+            const msg =
+                (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+                (err as Error)?.message ??
+                "Failed to change password";
+            setMessage(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     const saveField = async () => {
         if (!editingField) return;
@@ -140,6 +189,8 @@ const Profile: React.FC = () => {
             setLoading(false);
         }
     };
+
+
 
     const deleteAccount = async () => {
         if (!confirm("Delete your account? This cannot be undone.")) return;
@@ -237,14 +288,7 @@ const Profile: React.FC = () => {
                     <div>
                         <div className="text-sm text-gray-500 mb-1">Password</div>
                         <div className="flex items-center gap-2">
-                            <div className="font-medium">{showPassword ? "••••••••" : "••••••••"}</div>
-                            <button
-                                className="text-sm px-2 py-1 border rounded"
-                                onClick={() => setShowPassword((s) => !s)}
-                                aria-label="Toggle password visibility"
-                            >
-                                {showPassword ? "Hide" : "Show"}
-                            </button>
+                            <div className="font-medium">••••••••</div>
                             <button
                                 className="text-sm px-2 py-1 border rounded text-blue-600"
                                 onClick={() => startEditing("password")}
@@ -293,18 +337,54 @@ const Profile: React.FC = () => {
                 {editingField && (
                     <div className="mt-6 p-4 border rounded bg-gray-50">
                         <div className="mb-2 font-medium">Edit {editingField}</div>
-                        <input
+
+                        {editingField === "password" ? (
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-sm text-gray-600 mb-1">Current password</label>
+                                    <input
+                                        className="w-full border rounded px-3 py-2"
+                                        type="password"
+                                        autoComplete="current-password"
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-gray-600 mb-1">New password</label>
+                                    <input
+                                        className="w-full border rounded px-3 py-2"
+                                        type="password"
+                                        autoComplete="new-password"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-gray-600 mb-1">Confirm new password</label>
+                                    <input
+                                        className="w-full border rounded px-3 py-2"
+                                        type="password"
+                                        autoComplete="new-password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        ):  <input
                             className="w-full border rounded px-3 py-2"
                             value={formValue}
                             onChange={(e) => setFormValue(e.target.value)}
                             type={editingField === "password" ? "password" : "text"}
-                        />
+                        />}
+
                         <div className="flex gap-2 mt-3">
                             <button
                                 className="px-3 py-2 bg-blue-600 text-white rounded"
-                                onClick={saveField}
+                                onClick={editingField === "password" ? savePasswordField : saveField}
                                 disabled={loading}
                             >
+
                                 Save
                             </button>
                             <button

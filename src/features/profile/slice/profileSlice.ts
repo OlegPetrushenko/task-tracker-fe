@@ -8,6 +8,9 @@ type ProfileSliceState = {
     isSaving: boolean;
     loadError: string | null;
     saveError: string | null;
+
+    isChangingPassword: boolean;
+    changePasswordError: string | null;
 };
 
 const initialState: ProfileSliceState = {
@@ -16,6 +19,8 @@ const initialState: ProfileSliceState = {
     isSaving: false,
     loadError: null,
     saveError: null,
+    isChangingPassword: false,
+    changePasswordError: null,
 };
 
 export const profileSlice = createAppSlice({
