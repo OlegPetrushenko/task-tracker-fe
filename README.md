@@ -8,6 +8,34 @@ npm install
 
 ---
 
+## ⚡ Getting Started
+
+To run the project locally:
+
+```bash
+# Start development server
+npm run dev
+
+# Build production version
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+### Environment Variables
+
+Create a `.env` file in the root of the project to configure API endpoints and other variables:
+
+```
+VITE_API_BASE_URL=http://localhost:8080/api
+VITE_FRONTEND_BASE_URL=http://localhost:5173
+```
+
+> Make sure to restart the dev server after changing `.env` variables.
+
+---
+
 ## 🎨 Styling with Tailwind CSS
 
 The project is already configured with **Tailwind CSS**.
@@ -74,3 +102,36 @@ Inside each feature:
 ### 📁 `/types`
 
 Global types used throughout the application (e.g., `User`, `Tokens`, `ApiError`, etc.)
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! You can help by:
+
+1. Forking the repository.
+2. Creating a new branch:
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+3. Making your changes and committing them:
+
+```bash
+git commit -m "Add new feature"
+```
+
+4. Pushing the branch to your fork and opening a Pull Request.
+
+Please make sure your code follows existing style conventions and is well-tested.
+
+---
+
+## 🔗 Useful Links
+
+* **React**: [https://reactjs.org/](https://reactjs.org/)
+* **TypeScript**: [https://www.typescriptlang.org/](https://www.typescriptlang.org/)
+* **Vite**: [https://vitejs.dev/](https://vitejs.dev/)
+* **Tailwind CSS**: [https://tailwindcss.com/docs](https://tailwindcss.com/docs)
+* **Axios**: [https://axios-http.com/](https://axios-http.com/)
