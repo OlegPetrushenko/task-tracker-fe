@@ -1,78 +1,76 @@
-## 🚀 React + TypeScript + Vite
+# 🚀 React + TypeScript + Vite
 
-Перед началом не забудьте выполнить установку зависимостей:
+Before starting, make sure to install dependencies:
 
 ```bash
 npm install
 ```
 
-### 🎨 Стилизация с Tailwind CSS
+---
 
-Проект уже настроен с использованием **Tailwind CSS**.
-Рекомендуем потратить немного времени на изучение его синтаксиса, чтобы легко и эффективно стилизовать интерфейс.
+## 🎨 Styling with Tailwind CSS
 
-* Документация: [https://tailwindcss.com/docs](https://tailwindcss.com/docs)
+The project is already configured with **Tailwind CSS**.
+We recommend spending a little time learning its syntax to style the interface quickly and effectively.
+
+* Documentation: [https://tailwindcss.com/docs](https://tailwindcss.com/docs)
 
 ---
 
-### 📡 Работа с API через Axios
+## 📡 Working with API via Axios
 
-Для отправки запросов используется **Axios**.
-Глобальная конфигурация уже настроена и находится в папке:
+**Axios** is used for sending API requests.
+The global configuration is set up and located in:
 
 ```
 /src/lib/axiosInstance.ts
 ```
 
-✅ Поддержка cookie-based аутентификации .
+✅ Supports cookie-based authentication.
 
 ---
 
-### ⚠️ Обработка ошибок
+## ⚠️ Error Handling
 
-Пример обработки серверных ошибок можно найти в **authSlice** (`/features/auth/authSlice.ts`).
-
----
-
-### ✅ Редирект после успешных запросов
-
-Форма регистрации демонстрирует, как выполнять **редирект** после успешного действия:
-
+Example of handling server errors can be found in **authSlice** (`/features/auth/authSlice.ts`).
 
 ---
 
-### 🗂️ Структура проекта
+## ✅ Redirect After Successful Requests
 
-#### 📁 `/pages`
+The registration form demonstrates how to perform a **redirect** after a successful action.
 
-Содержит **страницы приложения**, соответствующие маршрутам (routes).
+---
 
-#### 📁 `/components`
+## 🗂️ Project Structure
 
-Хранятся **переиспользуемые UI-компоненты** и общие визуальные блоки, не относящиеся напрямую к конкретным фичам.
+### 📁 `/pages`
 
-#### 📁 `/features`
+Contains **application pages**, corresponding to routes.
 
-Каждая фича (feature) — это **логически изолированная область приложения**:
+### 📁 `/components`
+
+Holds **reusable UI components** and visual blocks that are not tied to a specific feature.
+
+### 📁 `/features`
+
+Each feature is a **logically isolated part of the application**:
 
 ```
 features/
-  auth/         # Аутентификация
-  projects/     # Проекты
-  tasks/        # Таски
+  auth/         # Authentication
+  projects/     # Projects
+  tasks/        # Tasks
 ```
 
-Внутри каждой фичи:
+Inside each feature:
 
-| Папка       | Назначение                          |
+| Folder      | Purpose                             |
 | ----------- | ----------------------------------- |
-| `slice.ts`  | Redux slice + бизнес-логика         |
-| `services/` | API-запросы, связанные с этой фичей |
-| `types.ts`  | Локальные типы для данной фичи      |
+| `slice.ts`  | Redux slice + business logic        |
+| `services/` | API requests related to the feature |
+| `types.ts`  | Local types for this feature        |
 
-#### 📁 `/types`
+### 📁 `/types`
 
-Глобальные типы, общие для всего приложения (например, `User`, `Tokens`, `ApiError` и т.д.).
-
----
-
+Global types used throughout the application (e.g., `User`, `Tokens`, `ApiError`, etc.)
